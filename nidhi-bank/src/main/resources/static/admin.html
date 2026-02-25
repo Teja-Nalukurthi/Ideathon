@@ -104,6 +104,22 @@
   #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 22px; border-radius: 20px; font-size: 0.85rem; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   #toast.show { opacity: 1; } #toast.ok { border-color: var(--accent); color: var(--accent); } #toast.err { border-color: var(--error); color: var(--error); }
   ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  /* ── NETWORK CARD ── */
+  .net-card { background: linear-gradient(135deg, #0d1f2d 0%, #0d2a1f 100%); border: 1px solid var(--accent2); border-radius: 14px; margin: 16px 24px 0; padding: 20px 24px; display: flex; align-items: center; gap: 24px; }
+  .net-left { flex: 1; }
+  .net-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent2); margin-bottom: 10px; }
+  .net-url { font-family: monospace; font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .net-url-copy { background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; cursor: pointer; }
+  .net-url-copy:hover { background: var(--accent); color: #000; }
+  .net-subs { font-size: 0.78rem; color: var(--muted); line-height: 1.8; }
+  .net-subs span { color: var(--text); font-weight: 600; }
+  .net-hotspot { margin-top: 10px; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 10px; }
+  .net-hotspot ol { padding-left: 16px; margin-top: 4px; }
+  .net-hotspot li { margin-bottom: 3px; }
+  .net-qr { flex-shrink: 0; text-align: center; }
+  .net-qr img { border-radius: 8px; background: #fff; padding: 6px; display: block; }
+  .net-qr-label { font-size: 0.65rem; color: var(--muted); margin-top: 6px; text-align: center; }
+  .net-loading { color: var(--muted); font-size: 0.85rem; }
 </style>
 </head>
 <body>
@@ -183,6 +199,37 @@
 </div>
 
 <div class="main" id="mainWrap">
+
+  <!-- NETWORK / DEVICE SETUP CARD -->
+  <div class="net-card" id="netCard">
+    <div class="net-left">
+      <div class="net-title">&#128246; Device Connection Setup</div>
+      <div class="net-url">
+        <span id="netUrl">Detecting IP&hellip;</span>
+        <button class="net-url-copy" onclick="copyNetUrl()">&#9109; Copy</button>
+      </div>
+      <div class="net-subs">
+        Bank Admin: <span id="netBankUrl">&mdash;</span><br/>
+        Local IP: <span id="netIp">&mdash;</span>
+      </div>
+      <div class="net-hotspot">
+        <strong>&#128241; Phone Setup (WiFi / Hotspot):</strong>
+        <ol>
+          <li>On laptop: <strong>Settings &rarr; Mobile Hotspot</strong> &rarr; Turn On</li>
+          <li>Phone connects to the hotspot network</li>
+          <li>Open Nidhi app &rarr; <strong>&#8942; menu &rarr; Set Server URL</strong></li>
+          <li>Scan the QR code &rarr; or type the URL shown above &rarr; Save</li>
+          <li>Tap <strong>Send money</strong> &mdash; fully offline, sub-100ms!</li>
+        </ol>
+      </div>
+    </div>
+    <div class="net-qr">
+      <img id="netQrImg" src="" width="160" height="160" alt="QR" style="display:none;"/>
+      <div id="netQrFallback" class="net-loading">Loading QR&hellip;</div>
+      <div class="net-qr-label">Scan with Nidhi app</div>
+    </div>
+  </div>
+
   <div class="stats-bar">
     <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value blue" id="stUsers">&mdash;</div></div>
     <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-value green" id="stActive">&mdash;</div></div>
@@ -268,7 +315,10 @@ async function toggleUser(){if(!currentUserId)return;try{const u=await fetch('/a
 async function resetDevice(){if(!currentUserId)return;if(!confirm('Reset TEE binding for '+(currentUser?.fullName||'this user')+'? They will need to re-register.'))return;try{const u=await fetch('/admin/users/'+currentUserId+'/reset-device',{method:'PUT'}).then(r=>r.json());currentUser=u;renderPanel(u);toast('TEE binding reset','ok');loadUsers();}catch(e){toast('Reset failed','err');}}
 async function adjustBalance(action){if(!currentUserId)return;const amountRupees=parseFloat(document.getElementById('adjAmount').value),note=document.getElementById('adjNote').value.trim();if(!amountRupees||amountRupees<=0){toast('Enter a valid amount','err');return;}const amountPaise=Math.round(amountRupees*100),label=action==='credit'?'Credit':'Debit';if(!confirm(label+' Rs '+amountRupees.toLocaleString('en-IN')+' '+(action==='credit'?'to':'from')+' '+(currentUser?.fullName||'user')+'?\nNote: '+(note||'-')))return;try{const res=await fetch('/admin/account/'+currentUserId+'/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amountPaise,note})});const data=await res.json();if(!res.ok||data.error){toast(data.error||label+' failed','err');return;}toast(label+' successful! Ref: '+data.referenceId,'ok');document.getElementById('adjAmount').value='';document.getElementById('adjNote').value='';currentUser=await fetch('/admin/users/'+currentUserId).then(r=>r.json());renderPanel(currentUser);const txs=await fetch('/admin/users/'+currentUserId+'/transactions').then(r=>r.json());renderPanelTx(txs);loadUsers();loadTxAll();loadStats();}catch(e){toast('Network error','err');}}
 function copyAcct(){const acct=document.getElementById('pAcct').textContent;navigator.clipboard.writeText(acct).then(()=>toast('Copied: '+acct,'ok'));}
-(async function init(){await Promise.all([loadUsers(),loadTxAll(),loadStats()]);setInterval(()=>loadStats(),15000);})();
+let _netBackendUrl='';
+async function loadNetworkInfo(){try{const s=await fetch('/api/server-info').then(r=>r.json());_netBackendUrl=s.backendUrl||'';document.getElementById('netUrl').textContent=s.backendUrl||'unknown';document.getElementById('netBankUrl').textContent=s.bankUrl||'unknown';document.getElementById('netIp').textContent=s.localIp||'unknown';const qr=document.getElementById('netQrImg'),fb=document.getElementById('netQrFallback');if(s.backendUrl){const qrUrl='https://chart.googleapis.com/chart?cht=qr&chs=160x160&chl='+encodeURIComponent(s.backendUrl)+'&choe=UTF-8';qr.src=qrUrl;qr.onload=()=>{qr.style.display='block';fb.style.display='none';};qr.onerror=()=>{fb.textContent=s.backendUrl;fb.style.fontSize='0.75rem';};}}catch(e){document.getElementById('netUrl').textContent='Could not detect IP — check Spring Boot is running';console.error('Network info error:',e);}}
+function copyNetUrl(){if(_netBackendUrl){navigator.clipboard.writeText(_netBackendUrl).then(()=>toast('Backend URL copied!','ok'));}}
+(async function init(){await Promise.all([loadNetworkInfo(),loadUsers(),loadTxAll(),loadStats()]);setInterval(()=>loadStats(),15000);})();
 </script>
 </body>
 </html>

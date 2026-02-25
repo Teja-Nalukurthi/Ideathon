@@ -15,6 +15,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import com.nidhi.app.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 
@@ -22,6 +24,17 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
+
+    // Holds a reference to the current server-URL dialog's EditText for QR auto-fill
+    private var _dialogUrlInput: EditText? = null
+
+    /** ZXing QR scanner: fills the open URL dialog when a code is scanned */
+    private val barcodeLauncher = registerForActivityResult(ScanContract()) { result ->
+        result.contents?.let { scanned ->
+            _dialogUrlInput?.setText(scanned)
+            Snackbar.make(binding.root, "Scanned: $scanned", Snackbar.LENGTH_SHORT).show()
+        }
+    }
 
     private val languages     = listOf("en","hi","te","ta","kn","ml","mr","bn")
     private val languageNames = listOf("English","Hindi","Telugu","Tamil","Kannada","Malayalam","Marathi","Bengali")
@@ -126,12 +139,14 @@ class MainActivity : AppCompatActivity() {
         val current = ServerConfig.getUrl(this)
         val input = EditText(this).apply {
             setText(current)
-            hint = "https://abc123.ngrok.io"
+            hint = "http://192.168.137.1:8081"
             setSingleLine()
         }
-        val title = if (firstTime) "Enter Server URL" else "Change Server URL"
+        _dialogUrlInput = input
+
+        val title = if (firstTime) "Connect to Server" else "Change Server URL"
         val msg   = if (firstTime)
-            "Paste your ngrok URL (e.g. https://abc123.ngrok.io)"
+            "Open the admin dashboard on the laptop, scan the QR code shown there — or type the WiFi/hotspot IP manually."
         else
             "Current: $current"
 
@@ -145,8 +160,21 @@ class MainActivity : AppCompatActivity() {
                     ServerConfig.saveUrl(this, url)
                     Snackbar.make(binding.root, "Server URL saved: $url", Snackbar.LENGTH_LONG).show()
                 }
+                _dialogUrlInput = null
             }
-            .setNegativeButton(if (firstTime) "Use Local" else "Cancel", null)
+            .setNeutralButton("\uD83D\uDCF7 Scan QR") { _, _ ->
+                _dialogUrlInput = input          // keep reference alive for the scan result
+                val opts = ScanOptions().apply {
+                    setPrompt("Point at the QR on the admin dashboard")
+                    setBeepEnabled(true)
+                    setOrientationLocked(false)
+                }
+                barcodeLauncher.launch(opts)
+                showServerUrlDialog(firstTime)   // re-open with whatever was already typed
+            }
+            .setNegativeButton(if (firstTime) "Manual" else "Cancel") { _, _ ->
+                _dialogUrlInput = null
+            }
             .show()
     }
 

@@ -58,4 +58,7 @@ dependencies {
 
     // Lottie animations
     implementation("com.airbnb.android:lottie:6.3.0")
+
+    // QR code scanner (for scanning server URL from admin dashboard)
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 }
