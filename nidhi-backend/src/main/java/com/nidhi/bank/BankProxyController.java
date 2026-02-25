@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -78,6 +79,38 @@ public class BankProxyController {
             log.error("Bank login proxy error: {}", e.getMessage());
             return ResponseEntity.status(502).body(
                     Map.of("success", false, "error", "Bank server unavailable"));
+        }
+    }
+
+    /** GET /bank/account/info?account=... — proxied to bank server */
+    @GetMapping("/bank/account/info")
+    public ResponseEntity<Map> getAccountInfo(@RequestParam String account) {
+        try {
+            Map resp = bankWebClient.get()
+                    .uri(u -> u.path("/bank/account/info").queryParam("account", account).build())
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            log.error("Bank account info proxy error: {}", e.getMessage());
+            return ResponseEntity.status(502).body(Map.of("error", "Bank server unavailable"));
+        }
+    }
+
+    /** GET /bank/account/transactions?account=... — proxied to bank server */
+    @GetMapping("/bank/account/transactions")
+    public ResponseEntity<List> getAccountTransactions(@RequestParam String account) {
+        try {
+            List resp = bankWebClient.get()
+                    .uri(u -> u.path("/bank/account/transactions").queryParam("account", account).build())
+                    .retrieve()
+                    .bodyToMono(List.class)
+                    .block();
+            return ResponseEntity.ok(resp != null ? resp : List.of());
+        } catch (Exception e) {
+            log.error("Bank transactions proxy error: {}", e.getMessage());
+            return ResponseEntity.status(502).body(List.of());
         }
     }
 }

@@ -1,7 +1,9 @@
 package com.nidhi.app
 
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 // ── Request models ─────────────────────────────────────────────
 
@@ -63,10 +65,41 @@ data class ConfirmResponse(
     val errorMessage: String?
 )
 
+data class AccountInfoResponse(
+    val accountNumber: String?,
+    val fullName:      String?,
+    val phone:         String?,
+    val balancePaise:  Long,
+    val languageCode:  String?,
+    val active:        Boolean
+)
+
+data class TransactionItem(
+    val referenceId:   String?,
+    val txType:        String?,
+    val fromAccount:   String?,
+    val fromName:      String?,
+    val toAccount:     String?,
+    val toName:        String?,
+    val amountPaise:   Long,
+    val status:        String?,
+    val failureReason: String?,
+    val adminNote:     String?,
+    val createdAt:     String?
+)
+
 // ── API interface ──────────────────────────────────────────────
 
-interface NidhiApi {    @POST("bank/auth/login")
+interface NidhiApi {
+    @POST("bank/auth/login")
     suspend fun login(@Body req: LoginRequest): LoginResponse
+
+    @GET("bank/account/info")
+    suspend fun getAccountInfo(@Query("account") account: String): AccountInfoResponse
+
+    @GET("bank/account/transactions")
+    suspend fun getTransactions(@Query("account") account: String): List<TransactionItem>
+
     @POST("transaction/initiate")
     suspend fun initiate(@Body req: InitiateRequest): InitiateResponse
 

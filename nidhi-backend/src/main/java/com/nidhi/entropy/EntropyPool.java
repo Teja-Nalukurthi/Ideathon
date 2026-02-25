@@ -108,9 +108,24 @@ public class EntropyPool {
     }
 
     public InsectReading getLastInsectReading() { return lastInsectReading.get(); }
-    public int getCurrentInsectCount() { return insectCount.get(); }
+
+    /** Returns 0 if the last reading is stale (>2 s old), so BIOLOGICAL clears when sidecar goes offline. */
+    public int getCurrentInsectCount() {
+        long age = System.currentTimeMillis() - lastInsectUpdateMs.get();
+        return age > 2000 ? 0 : insectCount.get();
+    }
+
     public int getMinInsectCount() { return minInsectCount; }
     public String[] getLastActiveSources() { return lastActiveSources.get(); }
+
+    /** Called by the SSE poller to keep /entropy/status and /dashboard/audit in sync. */
+    public void setLastActiveSources(String[] sources) { lastActiveSources.set(sources); }
+
+    /** Called by the SSE poller when the sidecar is unreachable to immediately zero the count. */
+    public void clearInsectReading() {
+        insectCount.set(0);
+        lastInsectUpdateMs.set(0);
+    }
 
     private InsectReading fetchInsectReading() {
         try {

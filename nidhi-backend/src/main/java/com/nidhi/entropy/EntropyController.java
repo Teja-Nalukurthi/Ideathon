@@ -44,15 +44,21 @@ public class EntropyController {
                         .timeout(Duration.ofMillis(400))
                         .block();
                 if (reading != null) entropyPool.updateInsectReading(reading);
-            } catch (Exception ignored) {}
-
-            if (clients.isEmpty()) return;
+                else entropyPool.clearInsectReading(); // null response = sidecar offline
+            } catch (Exception e) {
+                entropyPool.clearInsectReading(); // request failed = sidecar offline
+            }
 
             int liveCount = entropyPool.getCurrentInsectCount();
             boolean insectActive = liveCount >= entropyPool.getMinInsectCount();
             String[] liveSources = insectActive
                     ? new String[]{"TRNG", "INSECT", "THERMAL", "JITTER", "CLIENT"}
                     : new String[]{"TRNG", "INSECT_FALLBACK", "THERMAL", "JITTER", "CLIENT"};
+
+            // Keep pool in sync so /entropy/status and /dashboard/audit reflect live state
+            entropyPool.setLastActiveSources(liveSources);
+
+            if (clients.isEmpty()) return;
 
             var payload = Map.of(
                     "insectCount", liveCount,

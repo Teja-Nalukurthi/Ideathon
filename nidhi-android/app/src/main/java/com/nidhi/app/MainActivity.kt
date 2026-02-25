@@ -60,6 +60,16 @@ class MainActivity : AppCompatActivity() {
         // Check connectivity to the embedded bank server and update status badge
         checkServerConnectivity()
 
+        // Handle extras from HomeActivity
+        val prefilledText = intent.getStringExtra(HomeActivity.EXTRA_INPUT_TEXT)
+        if (!prefilledText.isNullOrBlank()) {
+            binding.etInput.setText(prefilledText)
+            binding.etInput.setSelection(prefilledText.length)
+        }
+        if (intent.getBooleanExtra(HomeActivity.EXTRA_VOICE_MODE, false)) {
+            binding.root.post { startVoiceInput() }
+        }
+
         // Show current URL and wire change button
         binding.tvServerUrl.text = ServerConfig.getUrl(this)
         binding.btnChangeServer.setOnClickListener { showServerUrlDialog(firstTime = false) }
