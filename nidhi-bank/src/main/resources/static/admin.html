@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Project Nidhi — Bank Admin</title>
+<style>
+  :root {
+    --bg: #0d0d1a; --surface: #13132b; --surface2: #1a1a35;
+    --accent: #00e5a0; --accent2: #00b4d8; --warn: #ff9800;
+    --error: #f44336; --text: #e0e0e0; --muted: #7a7a9a;
+    --border: #2a2a4a; --success: #4caf50;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 1.3rem; color: var(--accent); letter-spacing: 2px; }
+  header span { font-size: 0.75rem; color: var(--muted); }
+  .header-badge { background: #1e3a2f; color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--accent); }
+
+  /* ── STATS BAR ── */
+  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 20px 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+  .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .stat-value { font-size: 1.6rem; font-weight: 700; margin-top: 6px; }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.blue  { color: var(--accent2); }
+  .stat-value.orange { color: var(--warn); }
+  .stat-value.white { color: #fff; }
+
+  /* ── MAIN LAYOUT ── */
+  .main { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 0 24px 24px; }
+
+  /* ── PANEL ── */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .panel-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .panel-title { font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); }
+
+  /* ── SEARCH ── */
+  .search-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; color: var(--text); font-size: 0.82rem; width: 220px; outline: none; }
+  .search-box:focus { border-color: var(--accent); }
+
+  /* ── USER TABLE ── */
+  .user-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .user-table th { padding: 10px 16px; text-align: left; color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .user-table td { padding: 12px 16px; border-bottom: 1px solid rgba(42,42,74,0.5); vertical-align: middle; }
+  .user-row { cursor: pointer; transition: background 0.15s; }
+  .user-row:hover { background: var(--surface2); }
+  .user-row.selected { background: #13233a; border-left: 3px solid var(--accent); }
+  .acc-badge { background: #1a2a1a; color: var(--accent); padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 0.75rem; }
+  .lang-badge { background: var(--surface2); color: var(--muted); padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; }
+  .tee-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .tee-on  { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .tee-off { background: var(--muted); }
+  .balance { font-weight: 700; color: #fff; }
+
+  /* ── TX HISTORY ROW ── */
+  .tx-details { background: #0b0b1e; }
+  .tx-inner { padding: 12px 20px 16px 36px; }
+  .tx-title { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .tx-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+  .tx-item { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 8px 12px; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); }
+  .tx-ref { font-size: 0.72rem; color: var(--muted); font-family: monospace; }
+  .tx-flow { font-size: 0.78rem; }
+  .tx-amount { font-weight: 700; font-size: 0.82rem; }
+  .tx-amount.debit  { color: var(--error); }
+  .tx-amount.credit { color: var(--accent); }
+  .tx-status-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; }
+  .badge-success { background: #1a2e1a; color: var(--success); }
+  .badge-failed  { background: #2e1a1a; color: var(--error); }
+  .no-tx { color: var(--muted); font-size: 0.78rem; font-style: italic; padding: 8px 0; }
+
+  /* ── REGISTER FORM ── */
+  .form-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .form-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; color: var(--text); font-size: 0.85rem; outline: none; transition: border 0.2s; }
+  .form-input:focus { border-color: var(--accent); }
+  .form-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; color: var(--text); font-size: 0.85rem; outline: none; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn-register { background: var(--accent); color: #0d0d1a; border: none; border-radius: 8px; padding: 12px; font-size: 0.88rem; font-weight: 700; letter-spacing: 1px; cursor: pointer; transition: opacity 0.2s; text-transform: uppercase; }
+  .btn-register:hover { opacity: 0.85; }
+  .btn-register:disabled { opacity: 0.4; cursor: not-allowed; }
+  .form-hint { font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── TOASTS ── */
+  #toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; z-index: 999; display: none; max-width: 320px; }
+  #toast.success { background: #1a2e1a; color: var(--accent); border: 1px solid var(--accent); }
+  #toast.error   { background: #2e1a1a; color: var(--error); border: 1px solid var(--error); }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 0.85rem; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0a0a15; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🏦 PROJECT NIDHI — BANK ADMIN</h1>
+    <span id="hdr-sub">Loading...</span>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <span class="header-badge" id="hdr-badge">● ONLINE</span>
+    <span style="font-size:0.75rem;color:var(--muted)" id="hdr-time"></span>
+  </div>
+</header>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-label">Total Users</div>
+    <div class="stat-value white" id="stat-users">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Balance</div>
+    <div class="stat-value green" id="stat-balance">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Transactions Today</div>
+    <div class="stat-value blue" id="stat-txday">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Volume Today</div>
+    <div class="stat-value orange" id="stat-vol">—</div>
+  </div>
+</div>
+
+<!-- Main layout -->
+<div class="main">
+
+  <!-- Left: User List -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Registered Users</span>
+      <input class="search-box" type="text" id="search" placeholder="Search name / phone / account…" oninput="filterUsers()"/>
+    </div>
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Account No.</th>
+          <th>Balance</th>
+          <th>Lang</th>
+          <th>TEE</th>
+          <th>Joined</th>
+        </tr>
+      </thead>
+      <tbody id="user-tbody"></tbody>
+    </table>
+    <div id="empty-users" class="empty" style="display:none">No users registered yet. Add one using the form →</div>
+  </div>
+
+  <!-- Right: Register Form -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Register New User</span>
+    </div>
+    <div class="form-body">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input class="form-input" id="f-name" type="text" placeholder="e.g. Ramu Yadav" maxlength="60"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number *</label>
+        <input class="form-input" id="f-phone" type="tel" placeholder="10-digit mobile number" maxlength="10"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Initial Balance (₹) *</label>
+          <input class="form-input" id="f-balance" type="number" placeholder="e.g. 5000" min="0" max="100000"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Language</label>
+          <select class="form-select" id="f-lang">
+            <option value="hi">Hindi</option>
+            <option value="te">Telugu</option>
+            <option value="ta">Tamil</option>
+            <option value="kn">Kannada</option>
+            <option value="ml">Malayalam</option>
+            <option value="mr">Marathi</option>
+            <option value="bn">Bengali</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">4-Digit PIN *</label>
+        <input class="form-input" id="f-pin" type="password" placeholder="••••" maxlength="4" pattern="[0-9]{4}"/>
+      </div>
+      <p class="form-hint">
+        ⓘ Registration is done locally by the bank manager.<br>
+        Account number is auto-generated (NIDHI + 9 digits).<br>
+        TEE key setup happens when user opens the app for the first time.
+      </p>
+      <button class="btn-register" id="btn-reg" onclick="registerUser()">Create Account</button>
+      <div id="form-error" style="color:var(--error);font-size:0.78rem;display:none"></div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+let allUsers = [];
+let expandedAccount = null;
+let txCache = {};
+
+const langNames = {hi:'Hindi',te:'Telugu',ta:'Tamil',kn:'Kannada',ml:'Malayalam',mr:'Marathi',bn:'Bengali',en:'English'};
+
+// ── Bootstrap ─────────────────────────────────────────────────────
+async function init() {
+  await Promise.all([loadStats(), loadUsers(), loadTxStats()]);
+  setInterval(() => Promise.all([loadStats(), loadUsers(), loadTxStats()]), 15000);
+  document.getElementById('hdr-time').textContent = new Date().toLocaleTimeString();
+  setInterval(() => { document.getElementById('hdr-time').textContent = new Date().toLocaleTimeString(); }, 1000);
+}
+
+// ── Stats ─────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const r = await fetch('/admin/stats');
+    const d = await r.json();
+    document.getElementById('stat-users').textContent = d.totalUsers;
+    document.getElementById('stat-balance').textContent = formatPaise(d.totalBalancePaise);
+    document.getElementById('hdr-sub').textContent = `${d.totalUsers} registered users | Last refreshed ${new Date().toLocaleTimeString()}`;
+  } catch(e) { document.getElementById('hdr-badge').textContent = '● OFFLINE'; document.getElementById('hdr-badge').style.background='#2e1a1a'; document.getElementById('hdr-badge').style.color='var(--error)'; }
+}
+
+async function loadTxStats() {
+  try {
+    const r = await fetch('/admin/txstats');
+    const d = await r.json();
+    document.getElementById('stat-txday').textContent = d.transactionsToday;
+    document.getElementById('stat-vol').textContent = formatPaise(d.volumePaiseToday);
+  } catch(e) {}
+}
+
+// ── Users ─────────────────────────────────────────────────────────
+async function loadUsers() {
+  try {
+    const r = await fetch('/admin/users');
+    allUsers = await r.json();
+    renderUsers(allUsers);
+  } catch(e) {}
+}
+
+function filterUsers() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const filtered = q ? allUsers.filter(u =>
+    u.fullName.toLowerCase().includes(q) ||
+    u.phone.includes(q) ||
+    u.accountNumber.toLowerCase().includes(q)
+  ) : allUsers;
+  renderUsers(filtered);
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('user-tbody');
+  const empty = document.getElementById('empty-users');
+  if (!users.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = users.map(u => {
+    const isExpanded = expandedAccount === u.accountNumber;
+    const joined = new Date(u.createdAt).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
+    const teeOn  = !!u.deviceId;
+    return `
+      <tr class="user-row${isExpanded ? ' selected' : ''}" onclick="toggleTx('${u.accountNumber}')">
+        <td style="font-weight:600">${esc(u.fullName)}</td>
+        <td style="font-family:monospace;color:var(--muted)">${esc(u.phone)}</td>
+        <td><span class="acc-badge">${esc(u.accountNumber)}</span></td>
+        <td class="balance">${formatPaise(u.balancePaise)}</td>
+        <td><span class="lang-badge">${langNames[u.languageCode] || u.languageCode}</span></td>
+        <td><span class="tee-dot ${teeOn ? 'tee-on' : 'tee-off'}"></span>${teeOn ? 'Active' : 'Pending'}</td>
+        <td style="color:var(--muted);font-size:0.78rem">${joined}</td>
+      </tr>
+      ${isExpanded ? `
+      <tr class="tx-details">
+        <td colspan="7">
+          <div class="tx-inner" id="tx-inner-${u.accountNumber}">
+            <div class="tx-title">Transaction History</div>
+            <div class="tx-list" id="tx-list-${u.accountNumber}">
+              <div style="color:var(--muted);font-size:0.78rem">Loading…</div>
+            </div>
+          </div>
+        </td>
+      </tr>` : ''}
+    `;
+  }).join('');
+
+  if (expandedAccount) loadTxForAccount(expandedAccount);
+}
+
+async function toggleTx(acc) {
+  expandedAccount = expandedAccount === acc ? null : acc;
+  filterUsers();
+}
+
+async function loadTxForAccount(acc) {
+  const el = document.getElementById(`tx-list-${acc}`);
+  if (!el) return;
+  try {
+    const r = await fetch(`/admin/transactions/${acc}`);
+    const txs = await r.json();
+    if (!txs.length) { el.innerHTML = '<div class="no-tx">No transactions yet.</div>'; return; }
+    el.innerHTML = txs.slice(0, 20).map(tx => {
+      const isDebit   = tx.fromAccount === acc;
+      const amountStr = formatPaise(tx.amountPaise);
+      const flow = isDebit
+        ? `<span style="color:var(--muted)">→</span> ${esc(tx.toName)}`
+        : `<span style="color:var(--muted)">←</span> ${esc(tx.fromName)}`;
+      const ts = new Date(tx.createdAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      const badge = tx.status === 'SUCCESS'
+        ? `<span class="tx-status-badge badge-success">✓ ${tx.status}</span>`
+        : `<span class="tx-status-badge badge-failed">✗ ${tx.status}</span>`;
+      return `
+        <div class="tx-item">
+          <div>
+            <div style="font-size:0.75rem;font-weight:600">${flow}</div>
+            <div class="tx-ref">${esc(tx.referenceId)} · ${ts}</div>
+            ${tx.entropySourcesUsed ? `<div style="font-size:0.68rem;color:var(--muted);margin-top:2px">🔐 ${esc(tx.entropySourcesUsed)}</div>` : ''}
+          </div>
+          <span class="tx-amount ${isDebit ? 'debit' : 'credit'}">${isDebit ? '−' : '+'}${amountStr}</span>
+          ${badge}
+        </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = `<div class="no-tx">Failed to load. ${e.message}</div>`; }
+}
+
+// ── Register ──────────────────────────────────────────────────────
+async function registerUser() {
+  const name    = document.getElementById('f-name').value.trim();
+  const phone   = document.getElementById('f-phone').value.trim();
+  const balance = document.getElementById('f-balance').value.trim();
+  const lang    = document.getElementById('f-lang').value;
+  const pin     = document.getElementById('f-pin').value.trim();
+  const errEl   = document.getElementById('form-error');
+
+  errEl.style.display = 'none';
+  if (!name)  { showError('Full name is required'); return; }
+  if (!/^[6-9]\d{9}$/.test(phone)) { showError('Invalid phone (must be 10 digits, starting 6-9)'); return; }
+  if (!balance || isNaN(balance) || Number(balance) < 0) { showError('Enter a valid initial balance'); return; }
+  if (!/^\d{4}$/.test(pin)) { showError('PIN must be exactly 4 digits'); return; }
+
+  const btn = document.getElementById('btn-reg');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  try {
+    const res = await fetch('/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: name, phone, languageCode: lang,
+        initialBalancePaise: Math.round(Number(balance) * 100),
+        pin
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { showError(data.error || 'Registration failed'); return; }
+
+    showToast(`✓ Account created: ${data.accountNumber}`, 'success');
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-phone').value = '';
+    document.getElementById('f-balance').value = '';
+    document.getElementById('f-pin').value = '';
+    await loadUsers();
+    await loadStats();
+  } catch(e) {
+    showError('Network error: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('form-error');
+  el.textContent = '⚠ ' + msg; el.style.display = 'block';
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function formatPaise(p) {
+  if (!p && p !== 0) return '—';
+  const r = Math.floor(p / 100), ps = p % 100;
+  const formatted = r.toLocaleString('en-IN');
+  return ps > 0 ? `₹${formatted}.${String(ps).padStart(2,'0')}` : `₹${formatted}`;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = type; el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+init();
+</script>
+</body>
+</html>

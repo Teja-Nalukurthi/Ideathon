@@ -35,4 +35,13 @@ public class WebClientConfig {
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
+
+    @Bean("bankWebClient")
+    public WebClient bankWebClient(
+            @Value("${bank.server.url:http://localhost:8082}") String bankUrl) {
+        return WebClient.builder()
+                .baseUrl(bankUrl)
+                .defaultHeader("Content-Type", "application/json")
+                .build();
+    }
 }

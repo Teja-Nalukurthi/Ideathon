@@ -1,0 +1,128 @@
+package com.nidhi.bank.transaction;
+
+import com.nidhi.bank.user.BankUser;
+import com.nidhi.bank.user.BankUserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class TransferService {
+
+    private final BankUserRepository userRepo;
+    private final BankTransactionRepository txRepo;
+
+    /**
+     * Execute a verified transfer. Called by the security backend after
+     * challenge verification succeeds. This is the ONLY place money moves.
+     */
+    @Transactional
+    public TransferResult executeTransfer(TransferRequest req) {
+        // Resolve sender
+        BankUser sender = userRepo.findByAccountNumber(req.fromAccount())
+                .or(() -> userRepo.findByPhone(req.fromAccount()))
+                .orElse(null);
+
+        // Resolve recipient (account number or phone)
+        BankUser recipient = userRepo.findByAccountNumber(req.toAccount())
+                .or(() -> userRepo.findByPhone(req.toAccount()))
+                .orElse(null);
+
+        BankTransaction tx = new BankTransaction();
+        tx.setReferenceId(req.referenceId());
+        tx.setAmountPaise(req.amountPaise());
+        tx.setEntropySourcesUsed(String.join(",", req.sourcesActive()));
+        tx.setInsectCount(req.insectCount());
+        tx.setResponseTimeMs(req.responseTimeMs());
+        tx.setCreatedAt(Instant.now());
+
+        if (sender == null) {
+            tx.setFromAccount(req.fromAccount());
+            tx.setFromName("Unknown");
+            tx.setToAccount(req.toAccount());
+            tx.setToName(recipient != null ? recipient.getFullName() : req.toAccount());
+            tx.setStatus(BankTransaction.TxStatus.FAILED);
+            tx.setBalanceAfterPaise(0);
+            tx.setFailureReason("Sender account not found: " + req.fromAccount());
+            txRepo.save(tx);
+            return TransferResult.fail(tx, "Sender account not found");
+        }
+
+        tx.setFromAccount(sender.getAccountNumber());
+        tx.setFromName(sender.getFullName());
+        tx.setToAccount(recipient != null ? recipient.getAccountNumber() : req.toAccount());
+        tx.setToName(recipient != null ? recipient.getFullName() : req.toAccount());
+
+        // Check balance
+        if (sender.getBalancePaise() < req.amountPaise()) {
+            tx.setStatus(BankTransaction.TxStatus.FAILED);
+            tx.setBalanceAfterPaise(sender.getBalancePaise());
+            tx.setFailureReason("Insufficient balance");
+            txRepo.save(tx);
+            return TransferResult.fail(tx, "Insufficient balance");
+        }
+
+        // Debit sender
+        long newSenderBalance = sender.getBalancePaise() - req.amountPaise();
+        sender.setBalancePaise(newSenderBalance);
+        userRepo.save(sender);
+
+        // Credit recipient if they exist in our bank
+        if (recipient != null) {
+            recipient.setBalancePaise(recipient.getBalancePaise() + req.amountPaise());
+            userRepo.save(recipient);
+        }
+
+        tx.setStatus(BankTransaction.TxStatus.SUCCESS);
+        tx.setBalanceAfterPaise(newSenderBalance);
+        txRepo.save(tx);
+
+        log.info("Transfer: {} → {} | ₹{} | ref={}",
+                sender.getFullName(), tx.getToName(),
+                req.amountPaise() / 100, req.referenceId());
+
+        return new TransferResult(true, tx, newSenderBalance, null);
+    }
+
+    public List<BankTransaction> getTransactionsForAccount(String accountNumber) {
+        return txRepo.findByFromAccountOrToAccountOrderByCreatedAtDesc(accountNumber, accountNumber);
+    }
+
+    public List<BankTransaction> getAllTransactions() {
+        return txRepo.findAllByOrderByCreatedAtDesc();
+    }
+
+    public DashboardStats getDashboardStats() {
+        long txToday = txRepo.countByCreatedAtAfter(Instant.now().minusSeconds(86400));
+        Long volToday = txRepo.sumSuccessfulAmountAfter(Instant.now().minusSeconds(86400));
+        return new DashboardStats(txToday, volToday != null ? volToday : 0L);
+    }
+
+    // ── DTOs ──────────────────────────────────────────────────────
+
+    public record TransferRequest(
+            String referenceId,
+            String fromAccount,
+            String toAccount,
+            long amountPaise,
+            String[] sourcesActive,
+            int insectCount,
+            long responseTimeMs
+    ) {}
+
+    public record TransferResult(boolean success, BankTransaction transaction,
+                                 long balanceAfterPaise, String error) {
+        static TransferResult fail(BankTransaction tx, String reason) {
+            return new TransferResult(false, tx, 0, reason);
+        }
+    }
+
+    public record DashboardStats(long transactionsToday, long volumePaiseToday) {}
+}

@@ -3,18 +3,37 @@ package com.nidhi.transaction;
 import com.nidhi.challenge.ChallengeEngine;
 import com.nidhi.dashboard.AuditLog;
 import com.nidhi.voice.VoiceService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TransactionService {
 
     private final VoiceService voiceService;
     private final ChallengeEngine challengeEngine;
     private final AuditLog auditLog;
+    private final WebClient bankClient;
+
+    @Value("${bank.internal.secret:nidhi-internal-secret-2026}")
+    private String bankSecret;
+
+    public TransactionService(VoiceService voiceService,
+                              ChallengeEngine challengeEngine,
+                              AuditLog auditLog,
+                              @Qualifier("bankWebClient") WebClient bankClient) {
+        this.voiceService    = voiceService;
+        this.challengeEngine = challengeEngine;
+        this.auditLog        = auditLog;
+        this.bankClient      = bankClient;
+    }
 
     public InitiateResponse initiate(InitiateRequest req) {
         VoiceService.VoiceParseResult voice = voiceService.processInput(
@@ -58,14 +77,45 @@ public class TransactionService {
 
         auditLog.logChallengeVerified(txId, deviceId, result.responseTimeMs(), recipient, formatted);
 
-        // Mock ledger commit
+        // Commit to bank ledger
         String ref = "NID-" + (System.currentTimeMillis() % 100000);
-        auditLog.logTransactionCommitted(txId, ref, recipient, formatted);
+        boolean bankOk = callBankTransfer(ref, deviceId, recipient, amountPaise,
+                result.sourcesActive(), result.insectCount(), result.responseTimeMs());
 
-        log.info("Committed: txId={} ref={} {}  -> {}", txId, ref, formatted, recipient);
+        auditLog.logTransactionCommitted(txId, ref, recipient, formatted);
+        log.info("Committed: txId={} ref={} {} -> {} bankOk={}", txId, ref, formatted, recipient, bankOk);
 
         return new ConfirmResponse(true, txId, ref, recipient, amountPaise, formatted,
                 result.seedHex(), result.sourcesActive(), result.responseTimeMs(), null, null);
+    }
+
+    private boolean callBankTransfer(String ref, String fromDeviceId, String toAccount,
+                                      long amountPaise, String[] sources, int insectCount, long responseMs) {
+        try {
+            var body = Map.of(
+                    "referenceId",   ref,
+                    "fromAccount",   fromDeviceId,   // bank server resolves by deviceId
+                    "toAccount",     toAccount,
+                    "amountPaise",   amountPaise,
+                    "sourcesActive", sources,
+                    "insectCount",   insectCount,
+                    "responseTimeMs", responseMs
+            );
+            var resp = bankClient.post()
+                    .uri("/bank/internal/transfer")
+                    .header("X-Internal-Secret", bankSecret)
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .timeout(Duration.ofSeconds(3))
+                    .block();
+            Boolean ok = resp != null && Boolean.TRUE.equals(resp.get("success"));
+            if (!ok) log.warn("Bank transfer returned failure for ref={}: {}", ref, resp);
+            return Boolean.TRUE.equals(ok);
+        } catch (Exception e) {
+            log.warn("Bank server unreachable for ref={}: {} — continuing without balance update", ref, e.getMessage());
+            return false;
+        }
     }
 
     private long safeParseLong(String s) {

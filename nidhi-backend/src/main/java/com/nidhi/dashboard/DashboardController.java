@@ -4,6 +4,7 @@ import com.nidhi.entropy.EntropyPool;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.Map;
 
@@ -13,6 +14,11 @@ public class DashboardController {
 
     private final AuditLog auditLog;
     private final EntropyPool entropyPool;
+
+    @GetMapping("/")
+    public RedirectView root() {
+        return new RedirectView("/dashboard.html");
+    }
 
     @GetMapping("/dashboard/audit")
     public ResponseEntity<Map<String, Object>> getAuditData() {

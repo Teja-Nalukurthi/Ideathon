@@ -1,0 +1,14 @@
+target/
+*.class
+*.jar
+*.war
+
+# SQLite database file — stays local, never committed
+*.db
+*.db-shm
+*.db-wal
+
+# IDE
+.idea/
+*.iml
+.vscode/
