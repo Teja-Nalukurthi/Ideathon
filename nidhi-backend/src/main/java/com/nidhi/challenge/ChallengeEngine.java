@@ -75,7 +75,7 @@ public class ChallengeEngine {
         if (p == null) {
             recordFailure(deviceId);
             return VerificationResult.fail("CHALLENGE_EXPIRED",
-                    "Challenge not found or expired. Transactions must complete within 5 seconds.");
+                    "Challenge not found or expired. Please confirm within 60 seconds.");
         }
         if (!p.deviceId().equals(deviceId)) {
             recordFailure(deviceId);

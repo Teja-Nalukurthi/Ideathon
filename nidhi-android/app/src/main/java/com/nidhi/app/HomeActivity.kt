@@ -62,9 +62,14 @@ class HomeActivity : AppCompatActivity() {
 
         setupGreeting(session)
         setupLanguageDropdown(session)
-        fetchAccountInfo()
         setupListeners()
         checkServerConnectivity()
+        // balance fetched in onResume so it refreshes after returning from MainActivity
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (SessionManager.isLoggedIn(this)) fetchAccountInfo()
     }
 
     // ─── Setup helpers ────────────────────────────────────────────────────────
@@ -156,7 +161,7 @@ class HomeActivity : AppCompatActivity() {
         binding.tvBalance.text             = "₹ ——"
         binding.tvAccountNumber.text       = acct
 
-        lifecycleScope.launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val info = NidhiClient.api(this@HomeActivity).getAccountInfo(acct)
                 SessionManager.updateBalance(this@HomeActivity, info.balancePaise)

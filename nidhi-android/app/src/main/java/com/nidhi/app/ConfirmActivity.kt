@@ -94,6 +94,15 @@ class ConfirmActivity : AppCompatActivity() {
 
     private fun showErrorDialog(rawMessage: String) {
         val (title, message) = when {
+            // ── Check EXPIRED first — "Challenge not found or expired" contains
+            // "not found" which would wrongly hit the recipient-not-found branch
+            rawMessage.contains("expired", ignoreCase = true) ||
+            rawMessage.contains("EXPIRED", ignoreCase = true) ||
+            rawMessage.contains("CHALLENGE_EXPIRED", ignoreCase = true) ||
+            rawMessage.contains("TTL_EXPIRED", ignoreCase = true) ->
+                "Session Expired" to
+                    "The confirmation window closed before you tapped Confirm. Please go back and try again."
+
             rawMessage.contains("Insufficient balance", ignoreCase = true) ||
             rawMessage.contains("INSUFFICIENT", ignoreCase = true) ->
                 "Insufficient Funds" to
@@ -113,11 +122,6 @@ class ConfirmActivity : AppCompatActivity() {
             rawMessage.contains("INACTIVE", ignoreCase = true) ->
                 "Account Suspended" to
                     "Your account has been suspended. Please contact your bank manager."
-
-            rawMessage.contains("expired", ignoreCase = true) ||
-            rawMessage.contains("EXPIRED", ignoreCase = true) ->
-                "Session Expired" to
-                    "This transaction timed out. Please go back and try again."
 
             rawMessage.contains("signature", ignoreCase = true) ||
             rawMessage.contains("INVALID_SIG", ignoreCase = true) ->
