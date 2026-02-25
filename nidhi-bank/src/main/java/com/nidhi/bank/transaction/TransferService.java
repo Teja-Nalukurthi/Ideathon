@@ -95,8 +95,79 @@ public class TransferService {
         return txRepo.findByFromAccountOrToAccountOrderByCreatedAtDesc(accountNumber, accountNumber);
     }
 
+    /** Get all transactions for a user by their database ID (for admin panel use) */
+    public List<BankTransaction> getTransactionsByUserId(Long userId) {
+        BankUser user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        return txRepo.findByFromAccountOrToAccountOrderByCreatedAtDesc(
+                user.getAccountNumber(), user.getAccountNumber());
+    }
+
     public List<BankTransaction> getAllTransactions() {
         return txRepo.findAllByOrderByCreatedAtDesc();
+    }
+
+    /** Admin manually credits a user's account (no challenge needed — local admin action) */
+    @Transactional
+    public BankTransaction adminCredit(Long userId, long amountPaise, String note) {
+        BankUser user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        long newBalance = user.getBalancePaise() + amountPaise;
+        user.setBalancePaise(newBalance);
+        userRepo.save(user);
+
+        BankTransaction tx = new BankTransaction();
+        tx.setReferenceId("ADM-CR-" + System.currentTimeMillis());
+        tx.setFromAccount("ADMIN");
+        tx.setFromName("Bank Admin");
+        tx.setToAccount(user.getAccountNumber());
+        tx.setToName(user.getFullName());
+        tx.setAmountPaise(amountPaise);
+        tx.setBalanceAfterPaise(newBalance);
+        tx.setStatus(BankTransaction.TxStatus.SUCCESS);
+        tx.setTxType(BankTransaction.TxType.ADMIN_CREDIT);
+        tx.setAdminNote(note);
+        tx.setEntropySourcesUsed("ADMIN_ACTION");
+        txRepo.save(tx);
+
+        log.info("Admin CREDIT: {} +₹{} | note={} | newBal={}",
+                user.getFullName(), amountPaise / 100, note, newBalance / 100);
+        return tx;
+    }
+
+    /** Admin manually debits a user's account */
+    @Transactional
+    public BankTransaction adminDebit(Long userId, long amountPaise, String note) {
+        BankUser user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        if (user.getBalancePaise() < amountPaise) {
+            throw new IllegalArgumentException(
+                    "Insufficient balance. Current: ₹" + user.getBalancePaise() / 100);
+        }
+
+        long newBalance = user.getBalancePaise() - amountPaise;
+        user.setBalancePaise(newBalance);
+        userRepo.save(user);
+
+        BankTransaction tx = new BankTransaction();
+        tx.setReferenceId("ADM-DR-" + System.currentTimeMillis());
+        tx.setFromAccount(user.getAccountNumber());
+        tx.setFromName(user.getFullName());
+        tx.setToAccount("ADMIN");
+        tx.setToName("Bank Admin");
+        tx.setAmountPaise(amountPaise);
+        tx.setBalanceAfterPaise(newBalance);
+        tx.setStatus(BankTransaction.TxStatus.SUCCESS);
+        tx.setTxType(BankTransaction.TxType.ADMIN_DEBIT);
+        tx.setAdminNote(note);
+        tx.setEntropySourcesUsed("ADMIN_ACTION");
+        txRepo.save(tx);
+
+        log.info("Admin DEBIT: {} -₹{} | note={} | newBal={}",
+                user.getFullName(), amountPaise / 100, note, newBalance / 100);
+        return tx;
     }
 
     public DashboardStats getDashboardStats() {

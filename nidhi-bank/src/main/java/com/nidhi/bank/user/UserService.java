@@ -36,6 +36,29 @@ public class UserService {
         return userRepo.findByDeviceId(deviceId);
     }
 
+    public Optional<BankUser> getById(Long id) {
+        return userRepo.findById(id);
+    }
+
+    @Transactional
+    public BankUser toggleActive(Long id) {
+        BankUser user = userRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+        user.setActive(!user.isActive());
+        return userRepo.save(user);
+    }
+
+    @Transactional
+    public BankUser resetDevice(Long id) {
+        BankUser user = userRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+        user.setDeviceId(null);
+        user.setPublicKeyBase64(null);
+        user.setDeviceRegisteredAt(null);
+        log.info("TEE/device reset for user={}", user.getFullName());
+        return userRepo.save(user);
+    }
+
     @Transactional
     public BankUser registerUser(RegisterRequest req) {
         if (userRepo.existsByPhone(req.phone())) {

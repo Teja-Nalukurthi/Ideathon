@@ -42,6 +42,13 @@ public class BankTransaction {
     @Enumerated(EnumType.STRING)
     private TxStatus status;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TxType txType = TxType.TRANSFER;
+
+    @Column
+    private String adminNote;   // reason for manual credit/debit
+
     @Column
     private String failureReason;
 
@@ -59,6 +66,7 @@ public class BankTransaction {
     private Instant createdAt = Instant.now();
 
     public enum TxStatus { SUCCESS, FAILED, REVERSED }
+    public enum TxType  { TRANSFER, ADMIN_CREDIT, ADMIN_DEBIT }
 
     // Display helper
     @Transient

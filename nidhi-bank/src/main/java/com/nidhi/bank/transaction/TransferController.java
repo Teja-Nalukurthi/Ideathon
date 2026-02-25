@@ -58,17 +58,65 @@ public class TransferController {
         return ResponseEntity.ok(transferService.getAllTransactions());
     }
 
-    /** GET /admin/transactions/{account} — tx history for a specific account */
+    /** GET /admin/transactions/{account} — tx history for a specific account number */
     @GetMapping("/admin/transactions/{account}")
     public ResponseEntity<List<BankTransaction>> accountTransactions(
             @PathVariable String account) {
         return ResponseEntity.ok(transferService.getTransactionsForAccount(account));
     }
 
+    /** GET /admin/users/{id}/transactions — tx history by user database ID (for admin panel) */
+    @GetMapping("/admin/users/{id}/transactions")
+    public ResponseEntity<List<BankTransaction>> userTransactions(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(transferService.getTransactionsByUserId(id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     /** GET /admin/txstats — transaction volume stats */
     @GetMapping("/admin/txstats")
     public ResponseEntity<TransferService.DashboardStats> txStats() {
         return ResponseEntity.ok(transferService.getDashboardStats());
+    }
+
+    record AdjustRequest(long amountPaise, String note) {}
+
+    /** POST /admin/account/{id}/credit — manually credit a user's balance */
+    @PostMapping("/admin/account/{id}/credit")
+    public ResponseEntity<?> credit(@PathVariable Long id, @RequestBody AdjustRequest req) {
+        if (req.amountPaise() <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Amount must be positive"));
+        }
+        try {
+            BankTransaction tx = transferService.adminCredit(id, req.amountPaise(), req.note());
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "referenceId", tx.getReferenceId(),
+                    "balanceAfterPaise", tx.getBalanceAfterPaise()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /** POST /admin/account/{id}/debit — manually debit a user's balance */
+    @PostMapping("/admin/account/{id}/debit")
+    public ResponseEntity<?> debit(@PathVariable Long id, @RequestBody AdjustRequest req) {
+        if (req.amountPaise() <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Amount must be positive"));
+        }
+        try {
+            BankTransaction tx = transferService.adminDebit(id, req.amountPaise(), req.note());
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "referenceId", tx.getReferenceId(),
+                    "balanceAfterPaise", tx.getBalanceAfterPaise()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     private String formatBalance(long paise) {

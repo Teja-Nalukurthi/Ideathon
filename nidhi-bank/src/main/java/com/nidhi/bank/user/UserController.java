@@ -44,6 +44,14 @@ public class UserController {
         }
     }
 
+    /** GET /admin/users/{id} — full user profile */
+    @GetMapping("/admin/users/{id}")
+    public ResponseEntity<?> getUser(@PathVariable Long id) {
+        return userService.getById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     /** DELETE /admin/users/{id} — deactivate user */
     @DeleteMapping("/admin/users/{id}")
     public ResponseEntity<?> deactivateUser(@PathVariable Long id) {
@@ -51,24 +59,26 @@ public class UserController {
         return ResponseEntity.ok(Map.of("status", "deactivated"));
     }
 
-    /** PUT /admin/users/{id}/balance — adjust balance (admin seed tool) */
-    @PutMapping("/admin/users/{id}/balance")
-    public ResponseEntity<?> adjustBalance(@PathVariable Long id,
-                                           @RequestBody Map<String, Long> body) {
-        return userService.getByAccountNumber("") // find by id instead
-                .map(u -> {
-                    userService.updateBalance(u.getAccountNumber(), body.get("balancePaise"));
-                    return ResponseEntity.ok(u);
-                })
-                .orElseGet(() -> userService.getAllUsers().stream()
-                        .filter(u -> u.getId().equals(id))
-                        .findFirst()
-                        .map(u -> {
-                            BankUser updated = userService.updateBalance(
-                                    u.getAccountNumber(), body.get("balancePaise"));
-                            return ResponseEntity.ok(updated);
-                        })
-                        .orElse(ResponseEntity.notFound().build()));
+    /** PUT /admin/users/{id}/toggle — activate or deactivate account */
+    @PutMapping("/admin/users/{id}/toggle")
+    public ResponseEntity<?> toggleUser(@PathVariable Long id) {
+        try {
+            BankUser u = userService.toggleActive(id);
+            return ResponseEntity.ok(Map.of("active", u.isActive(), "fullName", u.getFullName()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /** PUT /admin/users/{id}/reset-device — wipe TEE/device link */
+    @PutMapping("/admin/users/{id}/reset-device")
+    public ResponseEntity<?> resetDevice(@PathVariable Long id) {
+        try {
+            BankUser u = userService.resetDevice(id);
+            return ResponseEntity.ok(Map.of("status", "device_reset", "fullName", u.getFullName()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     /**

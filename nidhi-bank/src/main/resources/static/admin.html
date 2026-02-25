@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -9,401 +9,268 @@
     --bg: #0d0d1a; --surface: #13132b; --surface2: #1a1a35;
     --accent: #00e5a0; --accent2: #00b4d8; --warn: #ff9800;
     --error: #f44336; --text: #e0e0e0; --muted: #7a7a9a;
-    --border: #2a2a4a; --success: #4caf50;
+    --border: #2a2a4a; --success: #4caf50; --credit: #00e5a0; --debit: #f44336;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
-
-  /* ── HEADER ── */
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
   header h1 { font-size: 1.3rem; color: var(--accent); letter-spacing: 2px; }
-  header span { font-size: 0.75rem; color: var(--muted); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
   .header-badge { background: #1e3a2f; color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--accent); }
-
-  /* ── STATS BAR ── */
+  #clock { font-size: 0.75rem; color: var(--muted); }
+  .main { display: flex; flex-direction: column; transition: margin-right 0.35s ease; }
+  .main.panel-open { margin-right: 460px; }
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 20px 24px; }
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
   .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
   .stat-value { font-size: 1.6rem; font-weight: 700; margin-top: 6px; }
-  .stat-value.green { color: var(--accent); }
-  .stat-value.blue  { color: var(--accent2); }
-  .stat-value.orange { color: var(--warn); }
-  .stat-value.white { color: #fff; }
-
-  /* ── MAIN LAYOUT ── */
-  .main { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 0 24px 24px; }
-
-  /* ── PANEL ── */
-  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .panel-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .panel-title { font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); }
-
-  /* ── SEARCH ── */
-  .search-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; color: var(--text); font-size: 0.82rem; width: 220px; outline: none; }
-  .search-box:focus { border-color: var(--accent); }
-
-  /* ── USER TABLE ── */
-  .user-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-  .user-table th { padding: 10px 16px; text-align: left; color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; border-bottom: 1px solid var(--border); background: var(--surface2); }
-  .user-table td { padding: 12px 16px; border-bottom: 1px solid rgba(42,42,74,0.5); vertical-align: middle; }
-  .user-row { cursor: pointer; transition: background 0.15s; }
-  .user-row:hover { background: var(--surface2); }
-  .user-row.selected { background: #13233a; border-left: 3px solid var(--accent); }
-  .acc-badge { background: #1a2a1a; color: var(--accent); padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 0.75rem; }
-  .lang-badge { background: var(--surface2); color: var(--muted); padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; }
-  .tee-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-  .tee-on  { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
-  .tee-off { background: var(--muted); }
-  .balance { font-weight: 700; color: #fff; }
-
-  /* ── TX HISTORY ROW ── */
-  .tx-details { background: #0b0b1e; }
-  .tx-inner { padding: 12px 20px 16px 36px; }
-  .tx-title { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-  .tx-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
-  .tx-item { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 8px 12px; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); }
-  .tx-ref { font-size: 0.72rem; color: var(--muted); font-family: monospace; }
-  .tx-flow { font-size: 0.78rem; }
-  .tx-amount { font-weight: 700; font-size: 0.82rem; }
-  .tx-amount.debit  { color: var(--error); }
-  .tx-amount.credit { color: var(--accent); }
-  .tx-status-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; }
-  .badge-success { background: #1a2e1a; color: var(--success); }
-  .badge-failed  { background: #2e1a1a; color: var(--error); }
-  .no-tx { color: var(--muted); font-size: 0.78rem; font-style: italic; padding: 8px 0; }
-
-  /* ── REGISTER FORM ── */
-  .form-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .stat-value.green { color: var(--accent); } .stat-value.blue { color: var(--accent2); }
+  .stat-value.orange { color: var(--warn); } .stat-value.red { color: var(--error); }
+  .content { padding: 0 24px 24px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title { font-size: 1rem; font-weight: 600; color: var(--accent2); letter-spacing: 1px; }
+  .reg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .reg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
-  .form-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; color: var(--text); font-size: 0.85rem; outline: none; transition: border 0.2s; }
-  .form-input:focus { border-color: var(--accent); }
-  .form-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; color: var(--text); font-size: 0.85rem; outline: none; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .btn-register { background: var(--accent); color: #0d0d1a; border: none; border-radius: 8px; padding: 12px; font-size: 0.88rem; font-weight: 700; letter-spacing: 1px; cursor: pointer; transition: opacity 0.2s; text-transform: uppercase; }
-  .btn-register:hover { opacity: 0.85; }
-  .btn-register:disabled { opacity: 0.4; cursor: not-allowed; }
-  .form-hint { font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
-
-  /* ── TOASTS ── */
-  #toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; z-index: 999; display: none; max-width: 320px; }
-  #toast.success { background: #1a2e1a; color: var(--accent); border: 1px solid var(--accent); }
-  #toast.error   { background: #2e1a1a; color: var(--error); border: 1px solid var(--error); }
-
-  /* ── EMPTY STATE ── */
-  .empty { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 0.85rem; }
-
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0a0a15; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .form-group label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+  .form-group input, .form-group select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; border-radius: 6px; font-size: 0.9rem; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent2); }
+  .reg-footer { margin-top: 14px; display: flex; justify-content: flex-end; }
+  .btn { border: none; border-radius: 6px; padding: 9px 22px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: opacity 0.2s; }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--accent2); color: #000; }
+  .btn-success { background: var(--credit); color: #000; }
+  .btn-danger  { background: var(--debit); color: #fff; }
+  .btn-warn    { background: var(--warn); color: #000; }
+  .btn-grey    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-sm { padding: 5px 14px; font-size: 0.8rem; }
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--surface2); padding: 12px 14px; font-size: 0.7rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; text-align: left; }
+  tbody tr { border-top: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.selected { background: #1a2b35 !important; border-left: 3px solid var(--accent2); }
+  td { padding: 12px 14px; font-size: 0.88rem; }
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+  .badge-active { background: #1e3a2f; color: var(--accent); }
+  .badge-inactive { background: #3a1e1e; color: var(--error); }
+  .badge-tee { background: #1a2b35; color: var(--accent2); }
+  .badge-notee { background: #2a2a1a; color: var(--warn); }
+  .tx-table td { font-size: 0.82rem; }
+  .tx-cr { color: var(--credit); } .tx-dr { color: var(--debit); } .tx-tr { color: var(--accent2); }
+  #panel { position: fixed; right: -460px; top: 0; bottom: 0; width: 460px; background: var(--surface); border-left: 1px solid var(--border); z-index: 200; display: flex; flex-direction: column; transition: right 0.35s ease; overflow: hidden; }
+  #panel.open { right: 0; }
+  .panel-head { padding: 18px 20px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent2), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; color: #000; flex-shrink: 0; }
+  .panel-name { font-size: 1.05rem; font-weight: 700; }
+  .panel-phone { font-size: 0.8rem; color: var(--muted); }
+  .panel-close { margin-left: auto; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; padding: 6px; border-radius: 4px; }
+  .panel-close:hover { color: var(--text); background: var(--surface2); }
+  .panel-body { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .info-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+  .info-label { font-size: 0.65rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; }
+  .info-val { font-size: 0.9rem; font-weight: 600; margin-top: 3px; }
+  .info-val.big { font-size: 1.4rem; color: var(--accent); }
+  .acct-copy { display: flex; align-items: center; gap: 8px; }
+  .copy-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; }
+  .copy-btn:hover { color: var(--accent2); background: var(--border); }
+  .psec { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .psec-title { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  .psec-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+  .adj-inputs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .adj-inputs input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; border-radius: 6px; font-size: 0.9rem; width: 100%; }
+  .adj-inputs input:focus { outline: none; border-color: var(--accent2); }
+  .adj-btns { display: flex; gap: 10px; }
+  .adj-btns .btn { flex: 1; }
+  .tee-info { font-size: 0.8rem; color: var(--muted); word-break: break-all; }
+  .tee-setup { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+  .tee-setup ol { padding-left: 18px; }
+  .tee-setup li { margin-bottom: 4px; }
+  .ptx-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .ptx-item:last-child { border-bottom: none; }
+  .ptx-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+  .ptx-icon.cr { background: #1e3a2f; color: var(--accent); }
+  .ptx-icon.dr { background: #3a1e1e; color: var(--error); }
+  .ptx-icon.tr { background: #1a2b35; color: var(--accent2); }
+  .ptx-body { flex: 1; }
+  .ptx-ref { font-size: 0.72rem; color: var(--muted); }
+  .ptx-desc { font-size: 0.85rem; font-weight: 600; margin: 2px 0; }
+  .ptx-note { font-size: 0.75rem; color: var(--muted); font-style: italic; }
+  .ptx-amount { text-align: right; }
+  .ptx-amount .amt { font-size: 0.95rem; font-weight: 700; }
+  .ptx-date { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+  .empty-state { text-align: center; color: var(--muted); padding: 20px; font-size: 0.85rem; }
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 22px; border-radius: 20px; font-size: 0.85rem; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  #toast.show { opacity: 1; } #toast.ok { border-color: var(--accent); color: var(--accent); } #toast.err { border-color: var(--error); color: var(--error); }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 </style>
 </head>
 <body>
-
 <header>
-  <div>
-    <h1>🏦 PROJECT NIDHI — BANK ADMIN</h1>
-    <span id="hdr-sub">Loading...</span>
-  </div>
-  <div style="display:flex;gap:12px;align-items:center">
-    <span class="header-badge" id="hdr-badge">● ONLINE</span>
-    <span style="font-size:0.75rem;color:var(--muted)" id="hdr-time"></span>
+  <h1>&#127970; NIDHI BANK &middot; ADMIN</h1>
+  <div class="header-right">
+    <span id="clock"></span>
+    <span class="header-badge">&#9889; Secure Operations</span>
   </div>
 </header>
 
-<!-- Stats Bar -->
-<div class="stats-bar">
-  <div class="stat-card">
-    <div class="stat-label">Total Users</div>
-    <div class="stat-value white" id="stat-users">—</div>
+<div id="panel">
+  <div class="panel-head">
+    <div class="avatar" id="pAvatar">--</div>
+    <div>
+      <div class="panel-name" id="pName">&mdash;</div>
+      <div class="panel-phone" id="pPhone">&mdash;</div>
+    </div>
+    <button class="panel-close" onclick="closePanel()">&#10005;</button>
   </div>
-  <div class="stat-card">
-    <div class="stat-label">Total Balance</div>
-    <div class="stat-value green" id="stat-balance">—</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-label">Transactions Today</div>
-    <div class="stat-value blue" id="stat-txday">—</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-label">Volume Today</div>
-    <div class="stat-value orange" id="stat-vol">—</div>
+  <div class="panel-body">
+    <div class="info-grid">
+      <div class="info-item" style="grid-column: span 2;">
+        <div class="info-label">Balance</div>
+        <div class="info-val big" id="pBal">&#8377;0</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Account No.</div>
+        <div class="acct-copy">
+          <div class="info-val" id="pAcct" style="font-size:0.78rem;">&mdash;</div>
+          <button class="copy-btn" onclick="copyAcct()">&#9109;</button>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Language</div>
+        <div class="info-val" id="pLang">&mdash;</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Status</div>
+        <div class="info-val" id="pStatus">&mdash;</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Joined</div>
+        <div class="info-val" id="pJoined" style="font-size:0.78rem;">&mdash;</div>
+      </div>
+    </div>
+    <div class="psec">
+      <div class="psec-title">Account Control</div>
+      <div class="psec-row">
+        <span style="font-size:0.85rem;">Suspend / Activate account</span>
+        <button class="btn btn-warn btn-sm" id="btnToggle" onclick="toggleUser()">Toggle</button>
+      </div>
+    </div>
+    <div class="psec">
+      <div class="psec-title">Balance Adjustment</div>
+      <div class="adj-inputs">
+        <input type="number" id="adjAmount" placeholder="Amount in Rs (e.g. 500)" min="1" step="1"/>
+        <input type="text" id="adjNote" placeholder="Reason / note for this adjustment"/>
+      </div>
+      <div class="adj-btns">
+        <button class="btn btn-success" onclick="adjustBalance('credit')">+ Credit</button>
+        <button class="btn btn-danger"  onclick="adjustBalance('debit')">- Debit</button>
+      </div>
+    </div>
+    <div class="psec">
+      <div class="psec-title">
+        <span>TEE / Device Binding</span>
+        <span id="teeBadge" class="badge">&mdash;</span>
+      </div>
+      <div id="teeContent">&mdash;</div>
+    </div>
+    <div class="psec">
+      <div class="psec-title">Transaction History</div>
+      <div id="pTxList"><div class="empty-state">Loading&hellip;</div></div>
+    </div>
   </div>
 </div>
 
-<!-- Main layout -->
-<div class="main">
-
-  <!-- Left: User List -->
-  <div class="panel">
-    <div class="panel-header">
-      <span class="panel-title">Registered Users</span>
-      <input class="search-box" type="text" id="search" placeholder="Search name / phone / account…" oninput="filterUsers()"/>
-    </div>
-    <table class="user-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Phone</th>
-          <th>Account No.</th>
-          <th>Balance</th>
-          <th>Lang</th>
-          <th>TEE</th>
-          <th>Joined</th>
-        </tr>
-      </thead>
-      <tbody id="user-tbody"></tbody>
-    </table>
-    <div id="empty-users" class="empty" style="display:none">No users registered yet. Add one using the form →</div>
+<div class="main" id="mainWrap">
+  <div class="stats-bar">
+    <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value blue" id="stUsers">&mdash;</div></div>
+    <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-value green" id="stActive">&mdash;</div></div>
+    <div class="stat-card"><div class="stat-label">Transactions (24h)</div><div class="stat-value orange" id="stTx24">&mdash;</div></div>
+    <div class="stat-card"><div class="stat-label">Total Volume</div><div class="stat-value green" id="stVol">&mdash;</div></div>
   </div>
-
-  <!-- Right: Register Form -->
-  <div class="panel">
-    <div class="panel-header">
-      <span class="panel-title">Register New User</span>
-    </div>
-    <div class="form-body">
-      <div class="form-group">
-        <label class="form-label">Full Name *</label>
-        <input class="form-input" id="f-name" type="text" placeholder="e.g. Ramu Yadav" maxlength="60"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Phone Number *</label>
-        <input class="form-input" id="f-phone" type="tel" placeholder="10-digit mobile number" maxlength="10"/>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Initial Balance (₹) *</label>
-          <input class="form-input" id="f-balance" type="number" placeholder="e.g. 5000" min="0" max="100000"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Language</label>
-          <select class="form-select" id="f-lang">
-            <option value="hi">Hindi</option>
-            <option value="te">Telugu</option>
-            <option value="ta">Tamil</option>
-            <option value="kn">Kannada</option>
-            <option value="ml">Malayalam</option>
-            <option value="mr">Marathi</option>
-            <option value="bn">Bengali</option>
-            <option value="en">English</option>
+  <div class="content">
+    <div class="section-header"><div class="section-title">Register New User</div></div>
+    <div class="reg-card">
+      <div class="reg-grid">
+        <div class="form-group"><label>Full Name</label><input id="rName" placeholder="Ravi Kumar"/></div>
+        <div class="form-group"><label>Phone Number</label><input id="rPhone" placeholder="+919876543210"/></div>
+        <div class="form-group"><label>Language</label>
+          <select id="rLang">
+            <option value="hi">Hindi</option><option value="te">Telugu</option>
+            <option value="ta">Tamil</option><option value="kn">Kannada</option>
+            <option value="mr">Marathi</option><option value="bn">Bengali</option>
+            <option value="gu">Gujarati</option><option value="en">English</option>
           </select>
         </div>
+        <div class="form-group"><label>Initial Balance (Rs)</label><input id="rBal" type="number" placeholder="1000" value="1000" min="0"/></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">4-Digit PIN *</label>
-        <input class="form-input" id="f-pin" type="password" placeholder="••••" maxlength="4" pattern="[0-9]{4}"/>
-      </div>
-      <p class="form-hint">
-        ⓘ Registration is done locally by the bank manager.<br>
-        Account number is auto-generated (NIDHI + 9 digits).<br>
-        TEE key setup happens when user opens the app for the first time.
-      </p>
-      <button class="btn-register" id="btn-reg" onclick="registerUser()">Create Account</button>
-      <div id="form-error" style="color:var(--error);font-size:0.78rem;display:none"></div>
+      <div class="reg-footer"><button class="btn btn-primary" onclick="registerUser()">+ Register User</button></div>
+    </div>
+    <div class="section-header">
+      <div class="section-title">All Users</div>
+      <button class="btn btn-grey btn-sm" onclick="loadUsers()">Refresh</button>
+    </div>
+    <div class="table-wrap" style="margin-bottom:24px;">
+      <table>
+        <thead><tr><th>Name</th><th>Phone</th><th>Account No.</th><th>Balance</th><th>Status</th><th>TEE</th><th>Joined</th></tr></thead>
+        <tbody id="userBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Loading...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="section-header">
+      <div class="section-title">All Transactions</div>
+      <button class="btn btn-grey btn-sm" onclick="loadTxAll()">Refresh</button>
+    </div>
+    <div class="table-wrap">
+      <table class="tx-table">
+        <thead><tr><th>Reference</th><th>Type</th><th>From</th><th>To</th><th>Amount</th><th>Status</th><th>Note</th><th>Time</th></tr></thead>
+        <tbody id="txBody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">Loading...</td></tr></tbody>
+      </table>
     </div>
   </div>
-
 </div>
 
 <div id="toast"></div>
-
 <script>
-let allUsers = [];
-let expandedAccount = null;
-let txCache = {};
-
-const langNames = {hi:'Hindi',te:'Telugu',ta:'Tamil',kn:'Kannada',ml:'Malayalam',mr:'Marathi',bn:'Bengali',en:'English'};
-
-// ── Bootstrap ─────────────────────────────────────────────────────
-async function init() {
-  await Promise.all([loadStats(), loadUsers(), loadTxStats()]);
-  setInterval(() => Promise.all([loadStats(), loadUsers(), loadTxStats()]), 15000);
-  document.getElementById('hdr-time').textContent = new Date().toLocaleTimeString();
-  setInterval(() => { document.getElementById('hdr-time').textContent = new Date().toLocaleTimeString(); }, 1000);
-}
-
-// ── Stats ─────────────────────────────────────────────────────────
-async function loadStats() {
-  try {
-    const r = await fetch('/admin/stats');
-    const d = await r.json();
-    document.getElementById('stat-users').textContent = d.totalUsers;
-    document.getElementById('stat-balance').textContent = formatPaise(d.totalBalancePaise);
-    document.getElementById('hdr-sub').textContent = `${d.totalUsers} registered users | Last refreshed ${new Date().toLocaleTimeString()}`;
-  } catch(e) { document.getElementById('hdr-badge').textContent = '● OFFLINE'; document.getElementById('hdr-badge').style.background='#2e1a1a'; document.getElementById('hdr-badge').style.color='var(--error)'; }
-}
-
-async function loadTxStats() {
-  try {
-    const r = await fetch('/admin/txstats');
-    const d = await r.json();
-    document.getElementById('stat-txday').textContent = d.transactionsToday;
-    document.getElementById('stat-vol').textContent = formatPaise(d.volumePaiseToday);
-  } catch(e) {}
-}
-
-// ── Users ─────────────────────────────────────────────────────────
-async function loadUsers() {
-  try {
-    const r = await fetch('/admin/users');
-    allUsers = await r.json();
-    renderUsers(allUsers);
-  } catch(e) {}
-}
-
-function filterUsers() {
-  const q = document.getElementById('search').value.trim().toLowerCase();
-  const filtered = q ? allUsers.filter(u =>
-    u.fullName.toLowerCase().includes(q) ||
-    u.phone.includes(q) ||
-    u.accountNumber.toLowerCase().includes(q)
-  ) : allUsers;
-  renderUsers(filtered);
-}
-
-function renderUsers(users) {
-  const tbody = document.getElementById('user-tbody');
-  const empty = document.getElementById('empty-users');
-  if (!users.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-
-  tbody.innerHTML = users.map(u => {
-    const isExpanded = expandedAccount === u.accountNumber;
-    const joined = new Date(u.createdAt).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
-    const teeOn  = !!u.deviceId;
-    return `
-      <tr class="user-row${isExpanded ? ' selected' : ''}" onclick="toggleTx('${u.accountNumber}')">
-        <td style="font-weight:600">${esc(u.fullName)}</td>
-        <td style="font-family:monospace;color:var(--muted)">${esc(u.phone)}</td>
-        <td><span class="acc-badge">${esc(u.accountNumber)}</span></td>
-        <td class="balance">${formatPaise(u.balancePaise)}</td>
-        <td><span class="lang-badge">${langNames[u.languageCode] || u.languageCode}</span></td>
-        <td><span class="tee-dot ${teeOn ? 'tee-on' : 'tee-off'}"></span>${teeOn ? 'Active' : 'Pending'}</td>
-        <td style="color:var(--muted);font-size:0.78rem">${joined}</td>
-      </tr>
-      ${isExpanded ? `
-      <tr class="tx-details">
-        <td colspan="7">
-          <div class="tx-inner" id="tx-inner-${u.accountNumber}">
-            <div class="tx-title">Transaction History</div>
-            <div class="tx-list" id="tx-list-${u.accountNumber}">
-              <div style="color:var(--muted);font-size:0.78rem">Loading…</div>
-            </div>
-          </div>
-        </td>
-      </tr>` : ''}
-    `;
-  }).join('');
-
-  if (expandedAccount) loadTxForAccount(expandedAccount);
-}
-
-async function toggleTx(acc) {
-  expandedAccount = expandedAccount === acc ? null : acc;
-  filterUsers();
-}
-
-async function loadTxForAccount(acc) {
-  const el = document.getElementById(`tx-list-${acc}`);
-  if (!el) return;
-  try {
-    const r = await fetch(`/admin/transactions/${acc}`);
-    const txs = await r.json();
-    if (!txs.length) { el.innerHTML = '<div class="no-tx">No transactions yet.</div>'; return; }
-    el.innerHTML = txs.slice(0, 20).map(tx => {
-      const isDebit   = tx.fromAccount === acc;
-      const amountStr = formatPaise(tx.amountPaise);
-      const flow = isDebit
-        ? `<span style="color:var(--muted)">→</span> ${esc(tx.toName)}`
-        : `<span style="color:var(--muted)">←</span> ${esc(tx.fromName)}`;
-      const ts = new Date(tx.createdAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-      const badge = tx.status === 'SUCCESS'
-        ? `<span class="tx-status-badge badge-success">✓ ${tx.status}</span>`
-        : `<span class="tx-status-badge badge-failed">✗ ${tx.status}</span>`;
-      return `
-        <div class="tx-item">
-          <div>
-            <div style="font-size:0.75rem;font-weight:600">${flow}</div>
-            <div class="tx-ref">${esc(tx.referenceId)} · ${ts}</div>
-            ${tx.entropySourcesUsed ? `<div style="font-size:0.68rem;color:var(--muted);margin-top:2px">🔐 ${esc(tx.entropySourcesUsed)}</div>` : ''}
-          </div>
-          <span class="tx-amount ${isDebit ? 'debit' : 'credit'}">${isDebit ? '−' : '+'}${amountStr}</span>
-          ${badge}
-        </div>`;
-    }).join('');
-  } catch(e) { el.innerHTML = `<div class="no-tx">Failed to load. ${e.message}</div>`; }
-}
-
-// ── Register ──────────────────────────────────────────────────────
-async function registerUser() {
-  const name    = document.getElementById('f-name').value.trim();
-  const phone   = document.getElementById('f-phone').value.trim();
-  const balance = document.getElementById('f-balance').value.trim();
-  const lang    = document.getElementById('f-lang').value;
-  const pin     = document.getElementById('f-pin').value.trim();
-  const errEl   = document.getElementById('form-error');
-
-  errEl.style.display = 'none';
-  if (!name)  { showError('Full name is required'); return; }
-  if (!/^[6-9]\d{9}$/.test(phone)) { showError('Invalid phone (must be 10 digits, starting 6-9)'); return; }
-  if (!balance || isNaN(balance) || Number(balance) < 0) { showError('Enter a valid initial balance'); return; }
-  if (!/^\d{4}$/.test(pin)) { showError('PIN must be exactly 4 digits'); return; }
-
-  const btn = document.getElementById('btn-reg');
-  btn.disabled = true; btn.textContent = 'Creating…';
-
-  try {
-    const res = await fetch('/admin/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fullName: name, phone, languageCode: lang,
-        initialBalancePaise: Math.round(Number(balance) * 100),
-        pin
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) { showError(data.error || 'Registration failed'); return; }
-
-    showToast(`✓ Account created: ${data.accountNumber}`, 'success');
-    document.getElementById('f-name').value = '';
-    document.getElementById('f-phone').value = '';
-    document.getElementById('f-balance').value = '';
-    document.getElementById('f-pin').value = '';
-    await loadUsers();
-    await loadStats();
-  } catch(e) {
-    showError('Network error: ' + e.message);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Create Account';
-  }
-}
-
-function showError(msg) {
-  const el = document.getElementById('form-error');
-  el.textContent = '⚠ ' + msg; el.style.display = 'block';
-}
-
-// ── Helpers ───────────────────────────────────────────────────────
-function formatPaise(p) {
-  if (!p && p !== 0) return '—';
-  const r = Math.floor(p / 100), ps = p % 100;
-  const formatted = r.toLocaleString('en-IN');
-  return ps > 0 ? `₹${formatted}.${String(ps).padStart(2,'0')}` : `₹${formatted}`;
-}
-
-function esc(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function showToast(msg, type='success') {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.className = type; el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 3500);
-}
-
-init();
+let currentUserId=null,currentUser=null,allUsers=[],allTx=[];
+function updateClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-IN',{hour12:false});}
+setInterval(updateClock,1000);updateClock();
+function toast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='show '+type;clearTimeout(el._t);el._t=setTimeout(()=>el.className='',3000);}
+function fmtRupees(p){const r=Math.floor(p/100),c=p%100;return 'Rs '+r.toLocaleString('en-IN')+(c?'.'+String(c).padStart(2,'0'):'');}
+function fmtDate(iso){if(!iso)return '-';return new Date(iso).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});}
+function initials(n){return(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function txClass(t){if(t==='ADMIN_CREDIT')return 'tx-cr';if(t==='ADMIN_DEBIT')return 'tx-dr';return 'tx-tr';}
+function txLabel(t){if(t==='ADMIN_CREDIT')return '+CREDIT';if(t==='ADMIN_DEBIT')return '-DEBIT';return 'TRANSFER';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+async function loadStats(){try{const s=await fetch('/admin/txstats').then(r=>r.json());document.getElementById('stUsers').textContent=s.totalUsers??'-';document.getElementById('stActive').textContent=s.activeUsers??'-';document.getElementById('stTx24').textContent=s.txLast24h??'-';document.getElementById('stVol').textContent=s.totalVolumePaise!=null?fmtRupees(s.totalVolumePaise):'-';}catch(e){}}
+async function loadUsers(){try{allUsers=await fetch('/admin/users').then(r=>r.json());const tb=document.getElementById('userBody');if(!allUsers.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No users yet</td></tr>';return;}tb.innerHTML=allUsers.map(u=>`<tr onclick="openPanel(${u.id})" ${u.id===currentUserId?'class="selected"':''}>
+<td><strong>${esc(u.fullName)}</strong></td><td>${esc(u.phone)}</td>
+<td style="font-family:monospace;font-size:0.8rem;">${esc(u.accountNumber)}</td>
+<td>${fmtRupees(u.balancePaise)}</td>
+<td><span class="badge ${u.active?'badge-active':'badge-inactive'}">${u.active?'ACTIVE':'INACTIVE'}</span></td>
+<td><span class="badge ${u.deviceId?'badge-tee':'badge-notee'}">${u.deviceId?'LINKED':'PENDING'}</span></td>
+<td style="font-size:0.78rem;">${fmtDate(u.createdAt)}</td></tr>`).join('');}catch(e){toast('Failed to load users','err');}}
+async function loadTxAll(){try{allTx=await fetch('/admin/transactions').then(r=>r.json());const tb=document.getElementById('txBody');if(!allTx.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No transactions yet</td></tr>';return;}tb.innerHTML=allTx.slice(0,200).map(t=>`<tr>
+<td style="font-family:monospace;font-size:0.75rem;">${esc(t.referenceId)}</td>
+<td><span class="${txClass(t.txType)}" style="font-weight:600;">${txLabel(t.txType)}</span></td>
+<td style="font-size:0.8rem;">${esc(t.fromName||t.fromAccount)}</td>
+<td style="font-size:0.8rem;">${esc(t.toName||t.toAccount)}</td>
+<td style="font-weight:700;" class="${txClass(t.txType)}">${fmtRupees(t.amountPaise)}</td>
+<td><span class="badge ${t.status==='SUCCESS'?'badge-active':'badge-inactive'}">${t.status}</span></td>
+<td style="font-size:0.77rem;color:var(--muted);">${esc(t.adminNote||'')}</td>
+<td style="font-size:0.75rem;">${fmtDate(t.createdAt)}</td></tr>`).join('');}catch(e){toast('Failed to load transactions','err');}}
+async function registerUser(){const name=document.getElementById('rName').value.trim(),phone=document.getElementById('rPhone').value.trim(),lang=document.getElementById('rLang').value,bal=parseInt(document.getElementById('rBal').value||'0',10);if(!name||!phone){toast('Name and phone are required','err');return;}try{const res=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fullName:name,phone,preferredLanguage:lang,initialBalancePaise:bal*100})});const data=await res.json();if(!res.ok){toast(data.error||'Registration failed','err');return;}toast('Registered: '+data.accountNumber,'ok');['rName','rPhone'].forEach(id=>document.getElementById(id).value='');document.getElementById('rBal').value='1000';loadUsers();loadStats();}catch(e){toast('Network error','err');}}
+async function openPanel(userId){currentUserId=userId;document.getElementById('panel').classList.add('open');document.getElementById('mainWrap').classList.add('panel-open');document.querySelectorAll('#userBody tr').forEach(r=>r.classList.remove('selected'));document.querySelectorAll('#userBody tr').forEach(r=>{if(r.getAttribute('onclick')&&r.getAttribute('onclick').includes('('+userId+')')){r.classList.add('selected');}});try{currentUser=await fetch('/admin/users/'+userId).then(r=>r.json());renderPanel(currentUser);}catch(e){toast('Failed to load profile','err');}try{const txs=await fetch('/admin/users/'+userId+'/transactions').then(r=>r.json());renderPanelTx(txs);}catch(e){document.getElementById('pTxList').innerHTML='<div class="empty-state">Error loading transactions</div>';}}
+function closePanel(){currentUserId=null;currentUser=null;document.getElementById('panel').classList.remove('open');document.getElementById('mainWrap').classList.remove('panel-open');document.querySelectorAll('#userBody tr').forEach(r=>r.classList.remove('selected'));}
+function renderPanel(u){document.getElementById('pAvatar').textContent=initials(u.fullName);document.getElementById('pName').textContent=u.fullName;document.getElementById('pPhone').textContent=u.phone;document.getElementById('pBal').textContent=fmtRupees(u.balancePaise);document.getElementById('pAcct').textContent=u.accountNumber;document.getElementById('pLang').textContent=(u.preferredLanguage||'').toUpperCase()||'-';document.getElementById('pJoined').textContent=fmtDate(u.createdAt);document.getElementById('pStatus').innerHTML=`<span class="badge ${u.active?'badge-active':'badge-inactive'}">${u.active?'ACTIVE':'INACTIVE'}</span>`;document.getElementById('btnToggle').textContent=u.active?'Suspend':'Activate';document.getElementById('btnToggle').className='btn btn-sm '+(u.active?'btn-warn':'btn-success');const teeBadge=document.getElementById('teeBadge'),teeContent=document.getElementById('teeContent');if(u.deviceId){teeBadge.className='badge badge-tee';teeBadge.textContent='LINKED';teeContent.innerHTML=`<div class="tee-info" style="margin-bottom:10px;"><strong>Device ID:</strong> ${esc(u.deviceId)}<br/><strong>Registered:</strong> ${fmtDate(u.deviceRegisteredAt)}<br/><strong>Public Key:</strong> <span style="font-size:0.7rem;word-break:break-all;">${esc((u.publicKeyBase64||'').slice(0,64))}...</span></div><button class="btn btn-danger btn-sm" onclick="resetDevice()">Reset TEE Binding</button>`;}else{teeBadge.className='badge badge-notee';teeBadge.textContent='PENDING';teeContent.innerHTML=`<div class="tee-setup"><p style="color:var(--warn);margin-bottom:8px;">No device linked. User must complete setup from the mobile app.</p><ol><li>Open <strong>Project Nidhi</strong> app on phone</li><li>Tap menu &gt; Set Server URL and enter ngrok URL</li><li>On Home screen tap <strong>Setup TEE / Register Device</strong></li><li>App generates ECDSA key in Android Keystore</li><li>Device ID and public key sent to /bank/device/register</li><li>Status changes to LINKED automatically</li></ol></div>`;}}
+function renderPanelTx(txs){const el=document.getElementById('pTxList');if(!txs||!txs.length){el.innerHTML='<div class="empty-state">No transactions yet</div>';return;}el.innerHTML=txs.map(t=>{const isCr=t.txType==='ADMIN_CREDIT',isDr=t.txType==='ADMIN_DEBIT',cls=isCr?'cr':isDr?'dr':'tr',icon=isCr?'+':isDr?'-':'&harr;',amtColor=isCr?'var(--credit)':isDr?'var(--debit)':'var(--accent2)',sign=isCr?'+':isDr?'-':'',counterparty=isCr||isDr?(isCr?'Admin Credit':'Admin Debit'):(t.fromAccount===currentUser?.accountNumber?('to '+(t.toName||t.toAccount)):('from '+(t.fromName||t.fromAccount)));return `<div class="ptx-item"><div class="ptx-icon ${cls}">${icon}</div><div class="ptx-body"><div class="ptx-ref">${esc(t.referenceId)}</div><div class="ptx-desc">${esc(counterparty)}</div>${t.adminNote?`<div class="ptx-note">${esc(t.adminNote)}</div>`:''}</div><div class="ptx-amount"><div class="amt" style="color:${amtColor};">${sign}${fmtRupees(t.amountPaise)}</div><div class="ptx-date">${fmtDate(t.createdAt)}</div></div></div>`;}).join('');}
+async function toggleUser(){if(!currentUserId)return;try{const u=await fetch('/admin/users/'+currentUserId+'/toggle',{method:'PUT'}).then(r=>r.json());currentUser=u;renderPanel(u);toast(u.active?'Account activated':'Account suspended','ok');loadUsers();}catch(e){toast('Toggle failed','err');}}
+async function resetDevice(){if(!currentUserId)return;if(!confirm('Reset TEE binding for '+(currentUser?.fullName||'this user')+'? They will need to re-register.'))return;try{const u=await fetch('/admin/users/'+currentUserId+'/reset-device',{method:'PUT'}).then(r=>r.json());currentUser=u;renderPanel(u);toast('TEE binding reset','ok');loadUsers();}catch(e){toast('Reset failed','err');}}
+async function adjustBalance(action){if(!currentUserId)return;const amountRupees=parseFloat(document.getElementById('adjAmount').value),note=document.getElementById('adjNote').value.trim();if(!amountRupees||amountRupees<=0){toast('Enter a valid amount','err');return;}const amountPaise=Math.round(amountRupees*100),label=action==='credit'?'Credit':'Debit';if(!confirm(label+' Rs '+amountRupees.toLocaleString('en-IN')+' '+(action==='credit'?'to':'from')+' '+(currentUser?.fullName||'user')+'?\nNote: '+(note||'-')))return;try{const res=await fetch('/admin/account/'+currentUserId+'/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amountPaise,note})});const data=await res.json();if(!res.ok||data.error){toast(data.error||label+' failed','err');return;}toast(label+' successful! Ref: '+data.referenceId,'ok');document.getElementById('adjAmount').value='';document.getElementById('adjNote').value='';currentUser=await fetch('/admin/users/'+currentUserId).then(r=>r.json());renderPanel(currentUser);const txs=await fetch('/admin/users/'+currentUserId+'/transactions').then(r=>r.json());renderPanelTx(txs);loadUsers();loadTxAll();loadStats();}catch(e){toast('Network error','err');}}
+function copyAcct(){const acct=document.getElementById('pAcct').textContent;navigator.clipboard.writeText(acct).then(()=>toast('Copied: '+acct,'ok'));}
+(async function init(){await Promise.all([loadUsers(),loadTxAll(),loadStats()]);setInterval(()=>loadStats(),15000);})();
 </script>
 </body>
 </html>
+
+
