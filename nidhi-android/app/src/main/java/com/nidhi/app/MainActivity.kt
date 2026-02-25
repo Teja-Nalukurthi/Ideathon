@@ -85,7 +85,8 @@ class MainActivity : AppCompatActivity() {
                         val resp = state.response
                         // Speak the confirmation aloud before showing the confirm screen
                         speakConfirmation(resp.confirmationText)
-                        val deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+                        val deviceId = SessionManager.get(this@MainActivity)?.accountNumber
+                            ?: Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
                         startActivity(Intent(this@MainActivity, ConfirmActivity::class.java).apply {
                             putExtra("txId",              resp.txId)
                             putExtra("recipient",         resp.recipient)
@@ -215,7 +216,8 @@ class MainActivity : AppCompatActivity() {
             return
         }
         val idx = languageNames.indexOf(binding.actvLanguage.text.toString()).coerceAtLeast(0)
-        val deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        val deviceId = SessionManager.get(this)?.accountNumber
+            ?: Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
         viewModel.initiate(text, languages[idx], deviceId)
     }
 
