@@ -1,6 +1,7 @@
 package com.nidhi.app
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +21,7 @@ sealed class ConfirmState {
     data class Error(val message: String) : ConfirmState()
 }
 
-class MainViewModel : ViewModel() {
+class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _initiateState = MutableStateFlow<InitiateState>(InitiateState.Idle)
     val initiateState: StateFlow<InitiateState> = _initiateState
@@ -41,7 +42,7 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             _initiateState.value = InitiateState.Loading
             try {
-                val resp = NidhiClient.api.initiate(
+                val resp = NidhiClient.api(getApplication()).initiate(
                     InitiateRequest(text, language, deviceId, pendingNonce)
                 )
                 if (resp.success) {
@@ -62,7 +63,7 @@ class MainViewModel : ViewModel() {
             _confirmState.value = ConfirmState.Loading
             try {
                 val signature = TransactionManager.signPayload(init.signingPayload!!, init.privateKeyBase64!!)
-                val result = NidhiClient.api.confirm(
+                val result = NidhiClient.api(getApplication()).confirm(
                     ConfirmRequest(init.txId!!, pendingDeviceId, pendingNonce, signature)
                 )
                 _confirmState.value = if (result.success) ConfirmState.Success(result)

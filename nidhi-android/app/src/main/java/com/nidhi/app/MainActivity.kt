@@ -4,10 +4,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognizerIntent
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
@@ -33,6 +37,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Prompt for server URL on first launch
+        if (!ServerConfig.isConfigured(this)) {
+            showServerUrlDialog(firstTime = true)
+        }
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, languageNames)
         binding.actvLanguage.setAdapter(adapter)
@@ -98,6 +107,47 @@ class MainActivity : AppCompatActivity() {
         val idx = languageNames.indexOf(binding.actvLanguage.text.toString()).coerceAtLeast(0)
         val deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
         viewModel.initiate(text, languages[idx], deviceId)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_server_url) {
+            showServerUrlDialog(firstTime = false)
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun showServerUrlDialog(firstTime: Boolean) {
+        val current = ServerConfig.getUrl(this)
+        val input = EditText(this).apply {
+            setText(current)
+            hint = "https://abc123.ngrok.io"
+            setSingleLine()
+        }
+        val title = if (firstTime) "Enter Server URL" else "Change Server URL"
+        val msg   = if (firstTime)
+            "Paste your ngrok URL (e.g. https://abc123.ngrok.io)"
+        else
+            "Current: $current"
+
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(msg)
+            .setView(input)
+            .setPositiveButton("Save") { _, _ ->
+                val url = input.text.toString().trim()
+                if (url.isNotEmpty()) {
+                    ServerConfig.saveUrl(this, url)
+                    Snackbar.make(binding.root, "Server URL saved: $url", Snackbar.LENGTH_LONG).show()
+                }
+            }
+            .setNegativeButton(if (firstTime) "Use Local" else "Cancel", null)
+            .show()
     }
 
     private fun showIdle() {
