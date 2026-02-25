@@ -14,6 +14,9 @@ public interface BankUserRepository extends JpaRepository<BankUser, Long> {
     Optional<BankUser> findByAccountNumber(String accountNumber);
     Optional<BankUser> findByDeviceId(String deviceId);
 
+    @Query("SELECT u FROM BankUser u WHERE LOWER(u.fullName) = LOWER(?1)")
+    Optional<BankUser> findByFullNameIgnoreCase(String fullName);
+
     List<BankUser> findAllByOrderByCreatedAtDesc();
 
     boolean existsByPhone(String phone);

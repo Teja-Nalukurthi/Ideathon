@@ -83,10 +83,9 @@ class MainActivity : AppCompatActivity() {
                     is InitiateState.Ready   -> {
                         showIdle()
                         val resp = state.response
-                        // Speak the confirmation aloud before showing the confirm screen
-                        speakConfirmation(resp.confirmationText)
                         val deviceId = SessionManager.get(this@MainActivity)?.accountNumber
                             ?: Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+                        // Launch confirm screen immediately for minimum latency on challenge timer
                         startActivity(Intent(this@MainActivity, ConfirmActivity::class.java).apply {
                             putExtra("txId",              resp.txId)
                             putExtra("recipient",         resp.recipient)
@@ -99,6 +98,8 @@ class MainActivity : AppCompatActivity() {
                             putExtra("expiresAtMs",       resp.expiresAtMs)
                             putExtra("sourcesActive",     resp.sourcesActive.toTypedArray())
                         })
+                        // Speak AFTER launching so the screen transition is not delayed
+                        speakConfirmation(resp.confirmationText)
                         viewModel.resetInitiate()
                     }
                     is InitiateState.Error -> {

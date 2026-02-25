@@ -31,9 +31,10 @@ public class TransferService {
                 .or(() -> userRepo.findByDeviceId(req.fromAccount()))
                 .orElse(null);
 
-        // Resolve recipient (account number or phone)
+        // Resolve recipient — try account number, phone, then full name
         BankUser recipient = userRepo.findByAccountNumber(req.toAccount())
                 .or(() -> userRepo.findByPhone(req.toAccount()))
+                .or(() -> userRepo.findByFullNameIgnoreCase(req.toAccount()))
                 .orElse(null);
 
         BankTransaction tx = new BankTransaction();
