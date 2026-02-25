@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         val serverUrl = ServerConfig.getUrl(this)
         lifecycleScope.launch(Dispatchers.IO) {
             val connected = try {
-                val conn = URL("${serverUrl}api/server-info").openConnection() as HttpURLConnection
+                val conn = URL("${serverUrl}api/health").openConnection() as HttpURLConnection
                 conn.connectTimeout = 4000
                 conn.readTimeout  = 4000
                 conn.requestMethod = "GET"

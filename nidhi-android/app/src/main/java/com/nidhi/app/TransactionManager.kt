@@ -1,5 +1,6 @@
 package com.nidhi.app
 
+import android.content.Context
 import java.security.KeyFactory
 import java.security.SecureRandom
 import java.security.Signature
@@ -10,6 +11,7 @@ object TransactionManager {
 
     /** Full initiate → sign → confirm flow. Must complete within 5s. */
     suspend fun sendMoney(
+        context: Context,
         text: String,
         languageCode: String,
         deviceId: String
@@ -17,7 +19,7 @@ object TransactionManager {
         val nonce = generateNonce()
 
         // Step 1: Initiate — get challenge + signing payload
-        val init = NidhiClient.api.initiate(
+        val init = NidhiClient.api(context).initiate(
             InitiateRequest(
                 textFallback = text,
                 languageCode = languageCode,
@@ -39,7 +41,7 @@ object TransactionManager {
         )
 
         // Step 3: Confirm — must happen within 5s of initiate
-        return NidhiClient.api.confirm(
+        return NidhiClient.api(context).confirm(
             ConfirmRequest(
                 txId = init.txId,
                 deviceId = deviceId,
