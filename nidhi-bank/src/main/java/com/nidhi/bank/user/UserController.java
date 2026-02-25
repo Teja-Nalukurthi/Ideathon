@@ -131,5 +131,27 @@ public class UserController {
         }
     }
 
+    /** POST /bank/auth/login — PIN-based login for the mobile app */
+    @PostMapping("/bank/auth/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+        try {
+            BankUser user = userService.loginUser(req.phone(), req.pin());
+            return ResponseEntity.ok(Map.of(
+                    "success",       true,
+                    "phone",         user.getPhone(),
+                    "fullName",      user.getFullName(),
+                    "accountNumber", user.getAccountNumber(),
+                    "languageCode",  user.getLanguageCode() != null ? user.getLanguageCode() : "hi",
+                    "balancePaise",  user.getBalancePaise()
+            ));
+        } catch (SecurityException e) {
+            return ResponseEntity.ok(Map.of("success", false, "error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("success", false, "error", "Login failed"));
+        }
+    }
+
+    public record LoginRequest(String phone, String pin) {}
+
     public record DeviceRegisterRequest(String phone, String deviceId, String publicKeyBase64) {}
 }

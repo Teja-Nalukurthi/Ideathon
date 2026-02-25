@@ -114,6 +114,25 @@ public class UserService {
     }
 
     /**
+     * PIN-based login for the mobile app.
+     * Returns the BankUser on success, throws SecurityException on failure.
+     */
+    public BankUser loginUser(String phone, String rawPin) {
+        BankUser user = userRepo.findByPhone(phone)
+                .orElseThrow(() -> new SecurityException("Invalid phone number or PIN"));
+        if (!user.isActive()) {
+            throw new SecurityException("Account suspended — contact your bank manager");
+        }
+        if (user.getPinHash() == null) {
+            throw new SecurityException("No PIN set — contact your bank manager");
+        }
+        if (!user.getPinHash().equals(hashPin(rawPin))) {
+            throw new SecurityException("Invalid phone number or PIN");
+        }
+        return user;
+    }
+
+    /**
      * Permanently hard-deletes a user.
      * If transferToAccount is provided, remaining balance is moved there first.
      * If null ("withdraw" / zero-balance case), the balance is simply absorbed.

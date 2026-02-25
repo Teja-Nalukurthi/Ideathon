@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -21,11 +22,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
+    private lateinit var tts: TextToSpeech
+    private var ttsReady = false
 
     private val languages     = listOf("en","hi","te","ta","kn","ml","mr","bn")
     private val languageNames = listOf("English","Hindi","Telugu","Tamil","Kannada","Malayalam","Marathi","Bengali")
@@ -42,6 +46,17 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Redirect to login if no session
+        if (!SessionManager.isLoggedIn(this)) {
+            startActivity(Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+            })
+            return
+        }
+
+        // Initialize TTS
+        tts = TextToSpeech(this) { status -> ttsReady = (status == TextToSpeech.SUCCESS) }
+
         // Check connectivity to the embedded bank server and update status badge
         checkServerConnectivity()
 
@@ -49,9 +64,13 @@ class MainActivity : AppCompatActivity() {
         binding.tvServerUrl.text = ServerConfig.getUrl(this)
         binding.btnChangeServer.setOnClickListener { showServerUrlDialog(firstTime = false) }
 
+        // Pre-select language from session
+        val sessionLang = SessionManager.get(this)?.languageCode ?: "en"
+        val langIdx = languages.indexOf(sessionLang).coerceAtLeast(0)
+
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, languageNames)
         binding.actvLanguage.setAdapter(adapter)
-        binding.actvLanguage.setText(languageNames[0], false)
+        binding.actvLanguage.setText(languageNames[langIdx], false)
 
         binding.btnMic.setOnClickListener { startVoiceInput() }
         binding.btnSend.setOnClickListener { submitTransaction() }
@@ -64,6 +83,8 @@ class MainActivity : AppCompatActivity() {
                     is InitiateState.Ready   -> {
                         showIdle()
                         val resp = state.response
+                        // Speak the confirmation aloud before showing the confirm screen
+                        speakConfirmation(resp.confirmationText)
                         val deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
                         startActivity(Intent(this@MainActivity, ConfirmActivity::class.java).apply {
                             putExtra("txId",              resp.txId)
@@ -81,13 +102,72 @@ class MainActivity : AppCompatActivity() {
                     }
                     is InitiateState.Error -> {
                         showIdle()
-                        Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG)
+                        val friendly = friendlyInitiateError(state.message)
+                        Snackbar.make(binding.root, friendly, Snackbar.LENGTH_LONG)
                             .setBackgroundTint(getColor(R.color.error)).show()
                         viewModel.resetInitiate()
                     }
                 }
             }
         }
+    }
+
+    private fun speakConfirmation(text: String?) {
+        if (!ttsReady || text.isNullOrBlank()) return
+        val langCode = SessionManager.get(this)?.languageCode ?: "en"
+        val locale = when (langCode) {
+            "hi" -> Locale("hi", "IN")
+            "te" -> Locale("te", "IN")
+            "ta" -> Locale("ta", "IN")
+            "kn" -> Locale("kn", "IN")
+            "ml" -> Locale("ml", "IN")
+            "mr" -> Locale("mr", "IN")
+            "bn" -> Locale("bn", "IN")
+            else -> Locale.ENGLISH
+        }
+        val result = tts.setLanguage(locale)
+        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            tts.setLanguage(Locale.ENGLISH)
+        }
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tx_confirm")
+    }
+
+    private fun confirmLogout() {
+        AlertDialog.Builder(this)
+            .setTitle("Logout")
+            .setMessage("Are you sure you want to logout?")
+            .setPositiveButton("Logout") { _, _ ->
+                SessionManager.clear(this)
+                if (::tts.isInitialized) tts.stop()
+                startActivity(Intent(this, LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                })
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun friendlyInitiateError(raw: String): String {
+        return when {
+            raw.contains("account", ignoreCase = true) &&
+                    raw.contains("not found", ignoreCase = true) ->
+                "Account not found. Please ensure your phone is registered with the bank."
+            raw.contains("parse", ignoreCase = true) ||
+                    raw.contains("understand", ignoreCase = true) ->
+                "Could not understand the command. Try: \"Send 500 rupees to Ramu\""
+            raw.contains("network", ignoreCase = true) ||
+                    raw.contains("connect", ignoreCase = true) ->
+                "Cannot reach bank server. Check your WiFi connection."
+            else -> raw
+        }
+    }
+
+    override fun onDestroy() {
+        if (::tts.isInitialized) {
+            tts.stop()
+            tts.shutdown()
+        }
+        super.onDestroy()
     }
 
     private fun checkServerConnectivity() {
@@ -145,11 +225,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_server_url) {
-            showServerUrlDialog(firstTime = false)
-            return true
+        return when (item.itemId) {
+            R.id.action_server_url -> { showServerUrlDialog(firstTime = false); true }
+            R.id.action_logout     -> { confirmLogout(); true }
+            else -> super.onOptionsItemSelected(item)
         }
-        return super.onOptionsItemSelected(item)
     }
 
     private fun showServerUrlDialog(firstTime: Boolean) {

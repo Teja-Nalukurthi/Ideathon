@@ -5,6 +5,11 @@ import retrofit2.http.POST
 
 // ── Request models ─────────────────────────────────────────────
 
+data class LoginRequest(
+    val phone: String,
+    val pin:   String
+)
+
 data class InitiateRequest(
     val textFallback: String,
     val languageCode: String,
@@ -19,7 +24,16 @@ data class ConfirmRequest(
     val signature: String
 )
 
-// ── Response models ────────────────────────────────────────────
+// ── Response models ────────────────────────────────────────────────────
+
+data class LoginResponse(
+    val success:       Boolean,
+    val phone:         String?,
+    val fullName:      String?,
+    val accountNumber: String?,
+    val languageCode:  String?,
+    val error:         String?
+)
 
 data class InitiateResponse(
     val success: Boolean,
@@ -51,7 +65,8 @@ data class ConfirmResponse(
 
 // ── API interface ──────────────────────────────────────────────
 
-interface NidhiApi {
+interface NidhiApi {    @POST("bank/auth/login")
+    suspend fun login(@Body req: LoginRequest): LoginResponse
     @POST("transaction/initiate")
     suspend fun initiate(@Body req: InitiateRequest): InitiateResponse
 

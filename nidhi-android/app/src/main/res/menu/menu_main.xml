@@ -8,4 +8,10 @@
         android:icon="@android:drawable/ic_menu_manage"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_logout"
+        android:title="Logout"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        app:showAsAction="never" />
+
 </menu>

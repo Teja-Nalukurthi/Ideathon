@@ -79,17 +79,24 @@ public class TransactionService {
 
         // Commit to bank ledger
         String ref = "NID-" + (System.currentTimeMillis() % 100000);
-        boolean bankOk = callBankTransfer(ref, deviceId, recipient, amountPaise,
+        BankTransferOutcome bankResult = callBankTransfer(ref, deviceId, recipient, amountPaise,
                 result.sourcesActive(), result.insectCount(), result.responseTimeMs());
 
         auditLog.logTransactionCommitted(txId, ref, recipient, formatted);
-        log.info("Committed: txId={} ref={} {} -> {} bankOk={}", txId, ref, formatted, recipient, bankOk);
 
+        if (!bankResult.success()) {
+            log.warn("Bank transfer failed for txId={}: {}", txId, bankResult.errorMessage());
+            return ConfirmResponse.error("BANK_TRANSFER_FAILED", bankResult.errorMessage());
+        }
+
+        log.info("Committed: txId={} ref={} {} -> {}", txId, ref, formatted, recipient);
         return new ConfirmResponse(true, txId, ref, recipient, amountPaise, formatted,
                 result.seedHex(), result.sourcesActive(), result.responseTimeMs(), null, null);
     }
 
-    private boolean callBankTransfer(String ref, String fromDeviceId, String toAccount,
+    private record BankTransferOutcome(boolean success, String errorMessage) {}
+
+    private BankTransferOutcome callBankTransfer(String ref, String fromDeviceId, String toAccount,
                                       long amountPaise, String[] sources, int insectCount, long responseMs) {
         try {
             var body = Map.of(
@@ -110,11 +117,17 @@ public class TransactionService {
                     .timeout(Duration.ofSeconds(3))
                     .block();
             Boolean ok = resp != null && Boolean.TRUE.equals(resp.get("success"));
-            if (!ok) log.warn("Bank transfer returned failure for ref={}: {}", ref, resp);
-            return Boolean.TRUE.equals(ok);
+            if (!ok) {
+                String errMsg = resp != null
+                        ? String.valueOf(resp.getOrDefault("error", "Transfer failed"))
+                        : "Bank server did not respond";
+                log.warn("Bank transfer failure for ref={}: {}", ref, errMsg);
+                return new BankTransferOutcome(false, errMsg);
+            }
+            return new BankTransferOutcome(true, null);
         } catch (Exception e) {
-            log.warn("Bank server unreachable for ref={}: {} — continuing without balance update", ref, e.getMessage());
-            return false;
+            log.warn("Bank server unreachable for ref={}: {}", ref, e.getMessage());
+            return new BankTransferOutcome(false, "Bank server unreachable — try again shortly");
         }
     }
 

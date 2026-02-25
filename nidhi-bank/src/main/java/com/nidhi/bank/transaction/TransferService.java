@@ -25,9 +25,10 @@ public class TransferService {
      */
     @Transactional
     public TransferResult executeTransfer(TransferRequest req) {
-        // Resolve sender
+        // Resolve sender — try account number, phone, and device ID
         BankUser sender = userRepo.findByAccountNumber(req.fromAccount())
                 .or(() -> userRepo.findByPhone(req.fromAccount()))
+                .or(() -> userRepo.findByDeviceId(req.fromAccount()))
                 .orElse(null);
 
         // Resolve recipient (account number or phone)

@@ -4,9 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.snackbar.Snackbar
 import com.nidhi.app.databinding.ActivityConfirmBinding
 import kotlinx.coroutines.launch
 
@@ -66,8 +66,7 @@ class ConfirmActivity : AppCompatActivity() {
                     }
                     is ConfirmState.Error -> {
                         showIdle()
-                        Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG)
-                            .setBackgroundTint(getColor(R.color.error)).show()
+                        showErrorDialog(state.message)
                         viewModel.reset()
                     }
                 }
@@ -91,5 +90,54 @@ class ConfirmActivity : AppCompatActivity() {
     private fun showLoading() {
         binding.progressBar.visibility = View.VISIBLE
         binding.btnConfirm.isEnabled = false
+    }
+
+    private fun showErrorDialog(rawMessage: String) {
+        val (title, message) = when {
+            rawMessage.contains("Insufficient balance", ignoreCase = true) ||
+            rawMessage.contains("INSUFFICIENT", ignoreCase = true) ->
+                "Insufficient Funds" to
+                    "Your account does not have enough balance for this transfer.\nPlease contact your bank manager to add funds."
+
+            rawMessage.contains("Sender account not found", ignoreCase = true) ||
+            rawMessage.contains("SENDER_NOT_FOUND", ignoreCase = true) ->
+                "Account Not Found" to
+                    "Your bank account could not be found. Please ensure your device is registered with the bank."
+
+            rawMessage.contains("not found", ignoreCase = true) ||
+            rawMessage.contains("RECIPIENT", ignoreCase = true) ->
+                "Recipient Not Found" to
+                    "The person you are sending money to is not registered in this bank."
+
+            rawMessage.contains("suspended", ignoreCase = true) ||
+            rawMessage.contains("INACTIVE", ignoreCase = true) ->
+                "Account Suspended" to
+                    "Your account has been suspended. Please contact your bank manager."
+
+            rawMessage.contains("expired", ignoreCase = true) ||
+            rawMessage.contains("EXPIRED", ignoreCase = true) ->
+                "Session Expired" to
+                    "This transaction timed out. Please go back and try again."
+
+            rawMessage.contains("signature", ignoreCase = true) ||
+            rawMessage.contains("INVALID_SIG", ignoreCase = true) ->
+                "Security Check Failed" to
+                    "Transaction signature was invalid. Please restart the app and try again."
+
+            rawMessage.contains("unreachable", ignoreCase = true) ||
+            rawMessage.contains("unavailable", ignoreCase = true) ->
+                "Server Unavailable" to
+                    "Cannot reach the bank server right now. Please check your connection and try again."
+
+            else ->
+                "Transaction Failed" to rawMessage
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("OK") { _, _ -> finish() }
+            .setCancelable(false)
+            .show()
     }
 }

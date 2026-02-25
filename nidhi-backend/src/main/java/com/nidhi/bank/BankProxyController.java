@@ -62,4 +62,22 @@ public class BankProxyController {
             return ResponseEntity.status(502).body(Map.of("error", "Bank server unavailable: " + e.getMessage()));
         }
     }
+
+    /** POST /bank/auth/login — proxied to bank server */
+    @PostMapping("/bank/auth/login")
+    public ResponseEntity<Map> login(@RequestBody Map<String, Object> body) {
+        try {
+            Map resp = bankWebClient.post()
+                    .uri("/bank/auth/login")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            log.error("Bank login proxy error: {}", e.getMessage());
+            return ResponseEntity.status(502).body(
+                    Map.of("success", false, "error", "Bank server unavailable"));
+        }
+    }
 }
