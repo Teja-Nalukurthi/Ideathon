@@ -7,8 +7,8 @@ object ServerConfig {
     private const val PREFS = "nidhi_prefs"
     private const val KEY_URL = "server_url"
 
-    /** Hardcoded bank-backend URL (laptop hotspot IP). Change here for different network setups. */
-    const val BASE_URL = "http://192.168.137.1:8081/"
+    /** Hardcoded bank-backend URL. Update to match the laptop's current IP on your network. */
+    const val BASE_URL = "http://10.58.19.75:8081/"
 
     fun getUrl(context: Context): String {
         // Allow runtime override via prefs (for dev/testing), otherwise use hardcoded default

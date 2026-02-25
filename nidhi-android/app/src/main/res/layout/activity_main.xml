@@ -28,17 +28,61 @@
             android:layout_height="wrap_content"
             android:text="Secure Voice Payments"
             android:textColor="@color/on_surface_dim"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp" />
 
-        <!-- Server connection status -->
-        <TextView
-            android:id="@+id/tvServerStatus"
-            android:layout_width="wrap_content"
+        <!-- Server connection status card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="&#9679; Connecting to bank server…"
-            android:textColor="@color/on_surface_dim"
-            android:textSize="12sp"
-            android:layout_marginBottom="28dp" />
+            app:cardBackgroundColor="@color/surface_card"
+            app:cardCornerRadius="10dp"
+            app:cardElevation="0dp"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvServerStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="&#9679;  Connecting&#8230;"
+                        android:textColor="@color/on_surface_dim"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvServerUrl"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/on_surface_dim"
+                        android:textSize="11sp"
+                        android:layout_marginTop="2dp" />
+
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChangeServer"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:strokeColor="@color/accent"
+                    android:textColor="@color/accent"
+                    android:textSize="11sp"
+                    android:text="Change URL" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Voice button -->
         <com.google.android.material.card.MaterialCardView

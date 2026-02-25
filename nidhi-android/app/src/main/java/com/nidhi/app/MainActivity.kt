@@ -45,6 +45,10 @@ class MainActivity : AppCompatActivity() {
         // Check connectivity to the embedded bank server and update status badge
         checkServerConnectivity()
 
+        // Show current URL and wire change button
+        binding.tvServerUrl.text = ServerConfig.getUrl(this)
+        binding.btnChangeServer.setOnClickListener { showServerUrlDialog(firstTime = false) }
+
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, languageNames)
         binding.actvLanguage.setAdapter(adapter)
         binding.actvLanguage.setText(languageNames[0], false)
@@ -88,6 +92,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkServerConnectivity() {
         val serverUrl = ServerConfig.getUrl(this)
+        binding.tvServerUrl.text = serverUrl
         lifecycleScope.launch(Dispatchers.IO) {
             val connected = try {
                 val conn = URL("${serverUrl}api/health").openConnection() as HttpURLConnection
@@ -162,6 +167,7 @@ class MainActivity : AppCompatActivity() {
                 val url = input.text.toString().trim()
                 if (url.isNotEmpty()) {
                     ServerConfig.saveUrl(this, url)
+                    binding.tvServerUrl.text = ServerConfig.getUrl(this)
                     Snackbar.make(binding.root, "Server URL saved: $url", Snackbar.LENGTH_LONG).show()
                     checkServerConnectivity()
                 }
