@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#1A1A2E</color>
+    <color name="primary_dark">#0F0F1A</color>
+    <color name="accent">#00E5A0</color>
+    <color name="accent_dark">#00B87A</color>
+    <color name="surface">#16213E</color>
+    <color name="surface_card">#1F2B47</color>
+    <color name="on_surface">#E8F0FE</color>
+    <color name="on_surface_dim">#8A9BB8</color>
+    <color name="error">#FF4057</color>
+    <color name="warning">#FFB300</color>
+    <color name="success">#00E5A0</color>
+    <color name="white">#FFFFFF</color>
+    <color name="transparent">#00000000</color>
+    <color name="entropy_active">#00E5A0</color>
+    <color name="entropy_fallback">#FFB300</color>
+</resources>

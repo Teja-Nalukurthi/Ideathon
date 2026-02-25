@@ -1,0 +1,12 @@
+target/
+*.class
+*.jar
+*.war
+
+# Local secrets — never commit this
+src/main/resources/application-local.properties
+
+# IDE
+.idea/
+*.iml
+.vscode/

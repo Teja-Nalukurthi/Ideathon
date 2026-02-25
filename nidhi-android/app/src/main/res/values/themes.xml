@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.NidhiApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/primary</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:navigationBarColor">@color/primary_dark</item>
+        <item name="android:textColorPrimary">@color/on_surface</item>
+        <item name="android:textColorSecondary">@color/on_surface_dim</item>
+    </style>
+
+    <style name="Widget.Nidhi.Button" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/accent</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+    </style>
+
+    <style name="Widget.Nidhi.Button.Outline" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">@color/accent</item>
+        <item name="android:textColor">@color/accent</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+    </style>
+
+    <style name="Widget.Nidhi.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/surface_card</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">0dp</item>
+    </style>
+
+    <style name="Widget.Nidhi.TextInput" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/accent</item>
+        <item name="hintTextColor">@color/on_surface_dim</item>
+        <item name="android:textColorHint">@color/on_surface_dim</item>
+    </style>
+</resources>

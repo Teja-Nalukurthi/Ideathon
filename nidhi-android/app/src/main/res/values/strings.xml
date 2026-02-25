@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NIDHI</string>
+    <string name="tagline">Secure Voice Payments</string>
+    <string name="hint_amount">Amount (e.g. 500)</string>
+    <string name="hint_recipient">Recipient name</string>
+    <string name="hint_language">Language</string>
+    <string name="btn_send">Send Money</string>
+    <string name="btn_confirm">Confirm Payment</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_new_tx">New Transaction</string>
+    <string name="lbl_entropy">Entropy Sources</string>
+    <string name="lbl_or">or type manually</string>
+    <string name="lbl_reference">Reference Number</string>
+    <string name="lbl_amount_to">Sending to</string>
+    <string name="lbl_seed">Entropy Seed</string>
+    <string name="lbl_sources_active">Sources Active</string>
+    <string name="lbl_response_time">Response Time</string>
+    <string name="msg_processing">Processing…</string>
+    <string name="msg_signing">Signing with ECDSA…</string>
+    <string name="msg_expired">Challenge expired. Please try again.</string>
+    <string name="msg_error_network">Cannot reach backend. Check your network.</string>
+    <string name="speak_hint">Tap mic and say: "Send 500 rupees to Ramu"</string>
+    <string name="entropy_secured">Transaction secured by 5-source entropy</string>
+</resources>

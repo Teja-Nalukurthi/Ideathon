@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nidhi Ops Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07090d; --surface:#0d1018; --card:#111520; --border:#1a2030;
+  --green:#00e5a0; --red:#ff4d6d; --amber:#ffc947; --purple:#a78bfa;
+  --text:#dde2ee; --muted:#3d4a60;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,229,160,.02) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,229,160,.02) 1px,transparent 1px);
+  background-size:36px 36px;pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;border-bottom:1px solid var(--border);
+  background:rgba(7,9,13,.96);position:sticky;top:0;z-index:100;}
+.logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green);}
+.logo span{color:var(--text);}
+.pills{display:flex;gap:8px;}
+.pill{padding:4px 10px;border-radius:2px;border:1px solid;font-size:10px;
+  font-weight:600;letter-spacing:.1em;display:flex;align-items:center;gap:5px;}
+.pill.ok{border-color:var(--green);color:var(--green);background:rgba(0,229,160,.07);}
+.pill.warn{border-color:var(--amber);color:var(--amber);background:rgba(255,201,71,.07);}
+.pill.err{border-color:var(--red);color:var(--red);background:rgba(255,77,109,.07);}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;
+  animation:blink 1.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+.clk{font-size:11px;color:var(--muted);}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:1fr 1fr 360px;
+  grid-template-rows:auto 1fr;gap:2px;padding:2px;min-height:calc(100vh - 53px);}
+
+/* PANELS */
+.panel{background:var(--card);border:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;}
+.ph{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface);
+  display:flex;align-items:center;justify-content:space-between;}
+.pt{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.15em;color:var(--green);text-transform:uppercase;}
+.pm{font-size:10px;color:var(--muted);}
+.pb{padding:16px;flex:1;overflow-y:auto;}
+
+/* SOURCE CARDS */
+.src-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:14px;}
+.src{background:var(--surface);border:1px solid var(--border);padding:10px 12px;transition:border-color .3s;}
+.src.on{border-color:rgba(0,229,160,.35);}
+.src.off{border-color:rgba(255,77,109,.35);opacity:.55;}
+.sn{font-size:9px;font-weight:600;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:3px;}
+.sv{font-size:12px;font-weight:600;color:var(--green);}
+.src.off .sv{color:var(--red);}
+.seed-lbl{font-size:9px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;}
+.seed-val{background:#05070a;border:1px solid var(--border);border-left:3px solid var(--green);
+  padding:10px 12px;font-size:10px;line-height:1.9;word-break:break-all;color:var(--green);}
+
+/* FEED */
+.feed-img{width:100%;aspect-ratio:4/3;background:#000;border:1px solid var(--border);display:block;object-fit:cover;}
+.coords{margin-top:10px;max-height:110px;overflow-y:auto;}
+.cr{display:flex;gap:12px;padding:3px 0;border-bottom:1px solid var(--border);
+  font-size:10px;animation:fi .3s ease;}
+@keyframes fi{from{background:rgba(0,229,160,.12);}to{background:transparent;}}
+.ci{color:var(--muted);width:18px;}.cx{color:var(--green);flex:1;}.cc{color:var(--amber);}
+
+/* AUDIT */
+.ae{padding:9px 0;border-bottom:1px solid var(--border);animation:si .4s ease;}
+@keyframes si{from{opacity:0;transform:translateX(8px);}to{opacity:1;transform:none;}}
+.at{font-size:9px;font-weight:600;letter-spacing:.12em;margin-bottom:3px;}
+.at.CHALLENGE_ISSUED{color:var(--amber);}
+.at.CHALLENGE_VERIFIED{color:var(--green);}
+.at.CHALLENGE_FAILED{color:var(--red);}
+.at.TRANSACTION_COMMITTED{color:var(--purple);}
+.ad{font-size:10px;color:#5a6880;line-height:1.6;margin-bottom:3px;}
+.ah{font-size:8px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;}
+.hc{background:var(--surface);border:1px solid var(--border);padding:1px 5px;}
+
+/* STATS */
+#stats{grid-column:1/3;grid-row:2;}
+.srow{display:flex;gap:2px;height:100%;}
+.sb{flex:1;background:var(--surface);border:1px solid var(--border);
+  padding:16px 20px;display:flex;flex-direction:column;justify-content:center;}
+.sl{font-size:9px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;}
+.sv2{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--green);line-height:1;}
+.ss{font-size:10px;color:var(--muted);margin-top:5px;}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <div style="display:flex;align-items:center;gap:14px">
+    <div class="logo">Nidhi <span>Ops</span></div>
+    <div class="pills">
+      <div class="pill ok" id="p-backend"><div class="dot"></div>BACKEND</div>
+      <div class="pill warn" id="p-insect"><div class="dot"></div>INSECTS:&nbsp;<span id="ic-hdr">—</span></div>
+    </div>
+  </div>
+  <div class="clk" id="clk">--:--:--</div>
+</div>
+
+<div class="grid">
+
+  <!-- ENTROPY PANEL -->
+  <div class="panel">
+    <div class="ph"><div class="pt">Entropy Pool</div><div class="pm" id="eu-time">—</div></div>
+    <div class="pb">
+      <div class="src-grid">
+        <div class="src on" id="s-TRNG"><div class="sn">S1 · TRNG</div><div class="sv">ACTIVE</div></div>
+        <div class="src on" id="s-INSECT"><div class="sn">S2 · Biological</div><div class="sv" id="ins-sv">ACTIVE</div></div>
+        <div class="src on" id="s-THERMAL"><div class="sn">S3 · Thermal</div><div class="sv">ACTIVE</div></div>
+        <div class="src on" id="s-JITTER"><div class="sn">S4 · Net Jitter</div><div class="sv">ACTIVE</div></div>
+        <div class="src on" id="s-CLIENT" style="grid-column:span 2"><div class="sn">S5 · Client Nonce</div><div class="sv">ACTIVE</div></div>
+      </div>
+      <div class="seed-lbl">// Last XOR → SHA-256 Seed</div>
+      <div class="seed-val" id="seed-val">Waiting for first transaction...</div>
+    </div>
+  </div>
+
+  <!-- LIVE FEED PANEL -->
+  <div class="panel">
+    <div class="ph"><div class="pt">Live Entropy Feed</div><div class="pm">YOLOv8 + motion detection</div></div>
+    <div class="pb">
+      <img class="feed-img" src="http://localhost:5001/insect/stream" id="feed"
+           onerror="this.alt='Start insect_sidecar/main.py to see live feed'">
+      <div class="coords" id="clist"><div style="color:var(--muted);font-size:10px;padding:6px 0">Waiting for coordinate data...</div></div>
+    </div>
+  </div>
+
+  <!-- AUDIT LOG -->
+  <div class="panel" style="grid-row:1/3">
+    <div class="ph"><div class="pt">Audit Log</div><div class="pm">Merkle-chained · <span id="te">0</span> entries</div></div>
+    <div class="pb" id="alist"><div style="color:var(--muted);font-size:10px">No transactions yet.</div></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="panel" id="stats">
+    <div class="pb" style="padding:0">
+      <div class="srow">
+        <div class="sb"><div class="sl">Total Transactions</div><div class="sv2" id="s-total">0</div><div class="ss">this session</div></div>
+        <div class="sb"><div class="sl">Live Entities</div><div class="sv2" id="s-ins" style="color:var(--green)">—</div><div class="ss">in entropy chamber</div></div>
+        <div class="sb"><div class="sl">Avg Response</div><div class="sv2" id="s-avg" style="color:var(--amber)">—</div><div class="ss">ms (challenge → verify)</div></div>
+        <div class="sb"><div class="sl">Active Sources</div><div class="sv2" id="s-srcs" style="color:var(--purple)">5</div><div class="ss">of 5 entropy sources</div></div>
+        <div class="sb" style="flex:2">
+          <div class="sl">System Status</div>
+          <div id="sys-status" style="font-size:13px;color:var(--green);font-weight:600;margin-top:4px">ALL SYSTEMS OPERATIONAL</div>
+          <div class="ss" id="sys-sub">Biological entropy active · Challenge engine ready</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let lastAuditCount = 0, totalTx = 0;
+
+// ── Clock ──────────────────────────────────────────────────────
+setInterval(() => {
+  document.getElementById('clk').textContent =
+    new Date().toLocaleTimeString('en-IN', {hour12: false});
+}, 1000);
+
+// ── SSE: Entropy live stream ───────────────────────────────────
+const es = new EventSource('/entropy/live');
+
+es.addEventListener('entropy-update', e => {
+  const d = JSON.parse(e.data);
+
+  const ic = d.insectCount || 0;
+  document.getElementById('ic-hdr').textContent = ic;
+  document.getElementById('s-ins').textContent = ic;
+  const insectThreshold = 0;
+  document.getElementById('p-insect').className = 'pill ' + (ic > insectThreshold ? 'ok' : 'warn');
+
+  const srcs = d.sourcesActive || [];
+  document.getElementById('s-srcs').textContent = srcs.length;
+
+  const insectOn = srcs.includes('INSECT');
+  const insectCard = document.getElementById('s-INSECT');
+  insectCard.className = 'src ' + (insectOn ? 'on' : 'off');
+  document.getElementById('ins-sv').textContent = insectOn ? 'ACTIVE' : 'FALLBACK';
+
+  document.getElementById('eu-time').textContent =
+    'updated ' + new Date().toLocaleTimeString('en-IN', {hour12: false});
+
+  const insects = d.insects || [];
+  if (insects.length > 0) {
+    document.getElementById('clist').innerHTML = insects.slice(0, 8).map((ins, i) =>
+      `<div class="cr">
+        <span class="ci">${i+1}</span>
+        <span class="cx">x:${ins.x.toFixed(4)} y:${ins.y.toFixed(4)}</span>
+        <span class="cc">${(ins.confidence*100).toFixed(0)}%</span>
+       </div>`
+    ).join('');
+  }
+});
+
+es.onerror = () => {
+  document.getElementById('p-backend').className = 'pill err';
+  document.getElementById('sys-status').textContent = 'BACKEND DISCONNECTED';
+  document.getElementById('sys-status').style.color = 'var(--red)';
+};
+
+// ── Poll: Audit log ────────────────────────────────────────────
+async function pollAudit() {
+  try {
+    const r = await fetch('/dashboard/audit');
+    if (!r.ok) throw new Error('bad response');
+    const d = await r.json();
+
+    document.getElementById('p-backend').className = 'pill ok';
+    document.getElementById('te').textContent = d.totalEntries;
+
+    const entries = d.entries || [];
+
+    const committed = entries.filter(e => e.type === 'TRANSACTION_COMMITTED').length;
+    if (committed !== totalTx) {
+      totalTx = committed;
+      document.getElementById('s-total').textContent = committed;
+    }
+
+    const verified = entries.filter(e => e.type === 'CHALLENGE_VERIFIED');
+    if (verified.length > 0) {
+      const times = verified.map(e => {
+        const m = e.details.match(/(\d+)ms/);
+        return m ? parseInt(m[1]) : null;
+      }).filter(Boolean);
+      if (times.length > 0) {
+        document.getElementById('s-avg').textContent =
+          Math.round(times.reduce((a,b) => a+b, 0) / times.length);
+      }
+    }
+
+    if (entries.length !== lastAuditCount) {
+      lastAuditCount = entries.length;
+      renderAudit(entries);
+    }
+
+    const issued = entries.find(e => e.type === 'CHALLENGE_ISSUED');
+    if (issued) {
+      const m = issued.details.match(/Seed: ([a-f0-9]+)/);
+      if (m) document.getElementById('seed-val').textContent = m[1] + '...';
+    }
+
+  } catch (e) {
+    document.getElementById('p-backend').className = 'pill err';
+  }
+}
+
+function renderAudit(entries) {
+  const el = document.getElementById('alist');
+  if (!entries.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:10px">No transactions yet.</div>';
+    return;
+  }
+  el.innerHTML = entries.map(e => `
+    <div class="ae">
+      <div class="at ${e.type}">${e.type.replace(/_/g,' ')}</div>
+      <div class="ad">${e.details}</div>
+      <div class="ah">
+        <span class="hc">#${e.sequence}</span>
+        <span class="hc">${e.entryHash.substring(0,10)}...</span>
+        <span style="font-size:8px;color:var(--muted)">${e.timestamp.substring(11,19)}</span>
+      </div>
+    </div>`).join('');
+}
+
+pollAudit();
+setInterval(pollAudit, 2000);
+</script>
+</body>
+</html>

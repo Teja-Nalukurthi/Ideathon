@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primary"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center">
+
+        <!-- Success icon -->
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="40dp"
+            android:text="✓"
+            android:textSize="40sp"
+            android:textColor="@color/primary"
+            android:gravity="center"
+            android:background="@drawable/circle_accent_bg"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Payment Sent!"
+            android:textColor="@color/on_surface"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tvEntropyBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5-SOURCE ENTROPY"
+            android:textColor="@color/accent"
+            android:textSize="12sp"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Details card -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Nidhi.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- Reference number -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Reference"
+                        android:textColor="@color/on_surface_dim"
+                        android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/tvRefNumber"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/accent"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Recipient -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Recipient"
+                        android:textColor="@color/on_surface_dim"
+                        android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/tvRecipient"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/on_surface"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Amount -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Amount"
+                        android:textColor="@color/on_surface_dim"
+                        android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/tvAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/on_surface"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Response time -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Response Time"
+                        android:textColor="@color/on_surface_dim"
+                        android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/tvResponseTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/on_surface"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Entropy sources -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Entropy Sources"
+                        android:textColor="@color/on_surface_dim"
+                        android:textSize="13sp" />
+                    <TextView
+                        android:id="@+id/tvSourceCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/accent"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Seed -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Entropy Seed"
+                    android:textColor="@color/on_surface_dim"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/tvSeedHex"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:textColor="@color/on_surface_dim"
+                    android:textSize="11sp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- New transaction button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNewTx"
+            style="@style/Widget.Nidhi.Button"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="NEW TRANSACTION"
+            android:textSize="15sp"
+            android:layout_marginBottom="32dp" />
+
+    </LinearLayout>
+</ScrollView>

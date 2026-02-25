@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primary"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Confirm Payment"
+            android:textColor="@color/on_surface"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Review before confirming"
+            android:textColor="@color/on_surface_dim"
+            android:textSize="14sp"
+            android:layout_marginBottom="28dp" />
+
+        <!-- Transaction card -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Nidhi.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SENDING TO"
+                    android:textColor="@color/on_surface_dim"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1" />
+
+                <TextView
+                    android:id="@+id/tvRecipient"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ramu"
+                    android:textColor="@color/on_surface"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AMOUNT"
+                    android:textColor="@color/on_surface_dim"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1" />
+
+                <TextView
+                    android:id="@+id/tvAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rs 500"
+                    android:textColor="@color/accent"
+                    android:textSize="36sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:id="@+id/tvConfirmText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Send 500 rupees to Ramu?"
+                    android:textColor="@color/on_surface_dim"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Entropy sources card -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Nidhi.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ENTROPY SOURCES"
+                    android:textColor="@color/on_surface_dim"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/chipTrng"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="TRNG"
+                        android:textColor="@color/accent"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:background="@drawable/chip_bg"
+                        android:padding="6dp"
+                        android:layout_marginEnd="4dp" />
+
+                    <TextView
+                        android:id="@+id/chipInsect"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="BIO"
+                        android:textColor="@color/accent"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:background="@drawable/chip_bg"
+                        android:padding="6dp"
+                        android:layout_marginEnd="4dp" />
+
+                    <TextView
+                        android:id="@+id/chipThermal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="THERMAL"
+                        android:textColor="@color/accent"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:background="@drawable/chip_bg"
+                        android:padding="6dp"
+                        android:layout_marginEnd="4dp" />
+
+                    <TextView
+                        android:id="@+id/chipJitter"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="JITTER"
+                        android:textColor="@color/accent"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:background="@drawable/chip_bg"
+                        android:padding="6dp"
+                        android:layout_marginEnd="4dp" />
+
+                    <TextView
+                        android:id="@+id/chipClient"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="CLIENT"
+                        android:textColor="@color/accent"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:background="@drawable/chip_bg"
+                        android:padding="6dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Expiry warning -->
+        <TextView
+            android:id="@+id/tvExpiry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Expires in 5s"
+            android:textColor="@color/warning"
+            android:textSize="13sp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Confirm button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConfirm"
+            style="@style/Widget.Nidhi.Button"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="CONFIRM &amp; SIGN"
+            android:textSize="15sp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Cancel button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancel"
+            style="@style/Widget.Nidhi.Button.Outline"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="CANCEL"
+            android:textSize="15sp" />
+
+        <!-- Progress -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            android:indeterminateTint="@color/accent" />
+
+    </LinearLayout>
+</ScrollView>
