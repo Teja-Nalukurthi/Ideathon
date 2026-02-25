@@ -30,7 +30,8 @@ public class AccountController {
                         "phone",         u.getPhone(),
                         "balancePaise",  u.getBalancePaise(),
                         "languageCode",  u.getLanguageCode() != null ? u.getLanguageCode() : "hi",
-                        "active",        u.isActive()
+                        "active",        u.isActive(),
+                        "deviceId",      u.getDeviceId()
                 )))
                 .orElse(ResponseEntity.notFound().build());
     }

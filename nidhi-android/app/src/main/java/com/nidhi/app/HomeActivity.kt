@@ -12,7 +12,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
+import java.util.Base64
 import com.google.android.material.snackbar.Snackbar
 import com.nidhi.app.databinding.ActivityHomeBinding
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +74,25 @@ class HomeActivity : AppCompatActivity() {
         super.onResume()
         if (SessionManager.isLoggedIn(this)) fetchAccountInfo()
     }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        menu.add(0, R.id.action_register_tee, 1, "Register Device").apply {
+            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        }
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_register_tee -> {
+                setupTEE()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
 
     // ─── Setup helpers ────────────────────────────────────────────────────────
 
@@ -170,6 +192,13 @@ class HomeActivity : AppCompatActivity() {
                     binding.tvBalance.text         = formatRupees(info.balancePaise)
                     binding.tvAccountNumber.text   = info.accountNumber ?: session.accountNumber
                     binding.tvUserName.text        = info.fullName?.ifBlank { session.fullName } ?: session.fullName
+                    // if device unregistered, remind user to set up TEE
+                    if (info.deviceId.isNullOrBlank()) {
+                        Snackbar.make(binding.root,
+                            "Device not registered. Use menu → Register Device", Snackbar.LENGTH_LONG)
+                            .setAction("OK", null)
+                            .show()
+                    }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -234,6 +263,56 @@ class HomeActivity : AppCompatActivity() {
     }
 
     // ─── Server status ────────────────────────────────────────────────────────
+
+    private fun setupTEE() {
+        val session = SessionManager.get(this) ?: return
+        val phone = session.phone
+        val deviceId = session.accountNumber
+        val pubB64 = getOrCreateKeyPair()?.let { keypair ->
+            Base64.getEncoder().encodeToString(keypair.public.encoded)
+        } ?: run {
+            Snackbar.make(binding.root, "Cannot access keystore", Snackbar.LENGTH_LONG).show()
+            return
+        }
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                NidhiClient.api(this@HomeActivity).registerDevice(
+                    mapOf("phone" to phone, "deviceId" to deviceId, "publicKeyBase64" to pubB64)
+                )
+                withContext(Dispatchers.Main) {
+                    Snackbar.make(binding.root, "Device registered successfully", Snackbar.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Snackbar.make(binding.root, "Registration failed: ${e.message}", Snackbar.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun getOrCreateKeyPair(): java.security.KeyPair? {
+        try {
+            val alias = "nidhi_tee"
+            val ks = java.security.KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+            if (!ks.containsAlias(alias)) {
+                val kpg = java.security.KeyPairGenerator.getInstance("EC", "AndroidKeyStore")
+                val spec = android.security.keystore.KeyGenParameterSpec.Builder(
+                    alias,
+                    android.security.keystore.KeyProperties.PURPOSE_SIGN or android.security.keystore.KeyProperties.PURPOSE_VERIFY
+                ).setAlgorithmParameterSpec(java.security.spec.ECGenParameterSpec("secp256r1"))
+                    .setDigests(android.security.keystore.KeyProperties.DIGEST_SHA256)
+                    .build()
+                kpg.initialize(spec)
+                kpg.generateKeyPair()
+            }
+            val publicKey = ks.getCertificate(alias).publicKey
+            val privateKey = ks.getKey(alias, null) as java.security.PrivateKey
+            return java.security.KeyPair(publicKey, privateKey)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+    }
 
     private fun checkServerConnectivity() {
         val serverUrl = ServerConfig.getUrl(this)

@@ -71,7 +71,8 @@ data class AccountInfoResponse(
     val phone:         String?,
     val balancePaise:  Long,
     val languageCode:  String?,
-    val active:        Boolean
+    val active:        Boolean,
+    val deviceId:      String?      // TEE-linked device identifier, null while not registered
 )
 
 data class TransactionItem(
@@ -105,4 +106,7 @@ interface NidhiApi {
 
     @POST("transaction/confirm")
     suspend fun confirm(@Body req: ConfirmRequest): ConfirmResponse
+
+    @POST("bank/device/register")
+    suspend fun registerDevice(@Body body: Map<String, String>): Map<String, Any>
 }
