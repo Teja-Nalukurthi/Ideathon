@@ -28,8 +28,17 @@
             android:layout_height="wrap_content"
             android:text="Secure Voice Payments"
             android:textColor="@color/on_surface_dim"
-            android:textSize="14sp"
-            android:layout_marginBottom="32dp" />
+            android:textSize="14sp" />
+
+        <!-- Server connection status -->
+        <TextView
+            android:id="@+id/tvServerStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="&#9679; Connecting to bank server…"
+            android:textColor="@color/on_surface_dim"
+            android:textSize="12sp"
+            android:layout_marginBottom="28dp" />
 
         <!-- Voice button -->
         <com.google.android.material.card.MaterialCardView

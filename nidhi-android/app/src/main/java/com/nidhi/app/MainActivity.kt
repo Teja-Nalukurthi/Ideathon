@@ -15,26 +15,17 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanOptions
 import com.nidhi.app.databinding.ActivityMainBinding
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
-
-    // Holds a reference to the current server-URL dialog's EditText for QR auto-fill
-    private var _dialogUrlInput: EditText? = null
-
-    /** ZXing QR scanner: fills the open URL dialog when a code is scanned */
-    private val barcodeLauncher = registerForActivityResult(ScanContract()) { result ->
-        result.contents?.let { scanned ->
-            _dialogUrlInput?.setText(scanned)
-            Snackbar.make(binding.root, "Scanned: $scanned", Snackbar.LENGTH_SHORT).show()
-        }
-    }
 
     private val languages     = listOf("en","hi","te","ta","kn","ml","mr","bn")
     private val languageNames = listOf("English","Hindi","Telugu","Tamil","Kannada","Malayalam","Marathi","Bengali")
@@ -51,10 +42,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Prompt for server URL on first launch
-        if (!ServerConfig.isConfigured(this)) {
-            showServerUrlDialog(firstTime = true)
-        }
+        // Check connectivity to the embedded bank server and update status badge
+        checkServerConnectivity()
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, languageNames)
         binding.actvLanguage.setAdapter(adapter)
@@ -93,6 +82,29 @@ class MainActivity : AppCompatActivity() {
                         viewModel.resetInitiate()
                     }
                 }
+            }
+        }
+    }
+
+    private fun checkServerConnectivity() {
+        val serverUrl = ServerConfig.getUrl(this)
+        lifecycleScope.launch(Dispatchers.IO) {
+            val connected = try {
+                val conn = URL("${serverUrl}api/server-info").openConnection() as HttpURLConnection
+                conn.connectTimeout = 4000
+                conn.readTimeout  = 4000
+                conn.requestMethod = "GET"
+                val code = conn.responseCode
+                conn.disconnect()
+                code in 200..299
+            } catch (e: Exception) { false }
+            withContext(Dispatchers.Main) {
+                binding.tvServerStatus.text =
+                    if (connected) "●  Connected to Nidhi Bank Server"
+                    else           "●  Bank server unreachable (• demo network only)"
+                binding.tvServerStatus.setTextColor(
+                    getColor(if (connected) R.color.accent else R.color.error)
+                )
             }
         }
     }
@@ -139,42 +151,22 @@ class MainActivity : AppCompatActivity() {
         val current = ServerConfig.getUrl(this)
         val input = EditText(this).apply {
             setText(current)
-            hint = "http://192.168.137.1:8081"
+            hint = ServerConfig.BASE_URL
             setSingleLine()
         }
-        _dialogUrlInput = input
-
-        val title = if (firstTime) "Connect to Server" else "Change Server URL"
-        val msg   = if (firstTime)
-            "Open the admin dashboard on the laptop, scan the QR code shown there — or type the WiFi/hotspot IP manually."
-        else
-            "Current: $current"
-
         AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(msg)
+            .setTitle(if (firstTime) "Bank Server URL" else "Change Server URL")
+            .setMessage("Hardcoded to ${ServerConfig.BASE_URL}\nOnly change if running on a different network.")
             .setView(input)
             .setPositiveButton("Save") { _, _ ->
                 val url = input.text.toString().trim()
                 if (url.isNotEmpty()) {
                     ServerConfig.saveUrl(this, url)
                     Snackbar.make(binding.root, "Server URL saved: $url", Snackbar.LENGTH_LONG).show()
+                    checkServerConnectivity()
                 }
-                _dialogUrlInput = null
             }
-            .setNeutralButton("\uD83D\uDCF7 Scan QR") { _, _ ->
-                _dialogUrlInput = input          // keep reference alive for the scan result
-                val opts = ScanOptions().apply {
-                    setPrompt("Point at the QR on the admin dashboard")
-                    setBeepEnabled(true)
-                    setOrientationLocked(false)
-                }
-                barcodeLauncher.launch(opts)
-                showServerUrlDialog(firstTime)   // re-open with whatever was already typed
-            }
-            .setNegativeButton(if (firstTime) "Manual" else "Cancel") { _, _ ->
-                _dialogUrlInput = null
-            }
+            .setNegativeButton("Cancel", null)
             .show()
     }
 

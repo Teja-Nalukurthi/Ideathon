@@ -118,5 +118,18 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /** POST /admin/users/{id}/delete-permanent — hard delete with optional fund transfer */
+    @PostMapping("/admin/users/{id}/delete-permanent")
+    public ResponseEntity<?> deleteUserPermanent(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        try {
+            userService.deleteUserPermanent(id, body.get("transferToAccount"));
+            return ResponseEntity.ok(Map.of("status", "deleted"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     public record DeviceRegisterRequest(String phone, String deviceId, String publicKeyBase64) {}
 }

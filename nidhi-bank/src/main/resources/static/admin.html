@@ -120,6 +120,22 @@
   .net-qr img { border-radius: 8px; background: #fff; padding: 6px; display: block; }
   .net-qr-label { font-size: 0.65rem; color: var(--muted); margin-top: 6px; text-align: center; }
   .net-loading { color: var(--muted); font-size: 0.85rem; }
+  /* ── DELETE MODAL ── */
+  .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:600;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s; }
+  .modal-overlay.show { opacity:1;pointer-events:all; }
+  .modal-box { background:var(--surface);border:1px solid #4a1e1e;border-radius:14px;padding:28px 24px;width:460px;max-width:calc(100vw - 40px); }
+  .modal-title { font-size:1.1rem;font-weight:700;color:var(--error);margin-bottom:6px; }
+  .modal-sub { font-size:0.85rem;color:var(--muted);margin-bottom:16px;line-height:1.6; }
+  .modal-balance { background:#2a1010;border:1px solid #6a2a2a;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.9rem; }
+  .modal-balance strong { color:var(--error); }
+  .modal-section { margin-bottom:14px; }
+  .modal-section label { font-size:0.72rem;text-transform:uppercase;color:var(--muted);letter-spacing:1px;display:block;margin-bottom:6px; }
+  .modal-section input { width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:0.88rem; }
+  .modal-section input:focus { outline:none;border-color:var(--error); }
+  .modal-sep { display:flex;align-items:center;gap:10px;margin:12px 0;color:var(--muted);font-size:0.75rem; }
+  .modal-sep::before,.modal-sep::after { content:'';flex:1;height:1px;background:var(--border); }
+  .modal-actions { display:flex;gap:10px;margin-top:20px;flex-wrap:wrap; }
+  .modal-actions .btn { flex:1;min-width:120px; }
 </style>
 </head>
 <body>
@@ -194,6 +210,13 @@
     <div class="psec">
       <div class="psec-title">Transaction History</div>
       <div id="pTxList"><div class="empty-state">Loading&hellip;</div></div>
+    </div>
+    <div class="psec" style="border-color:#4a1e1e;">
+      <div class="psec-title" style="color:var(--error);">&#9888; Danger Zone</div>
+      <div class="psec-row">
+        <span style="font-size:0.85rem;">Permanently remove this account</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser()">Delete Account</button>
+      </div>
     </div>
   </div>
 </div>
@@ -277,6 +300,34 @@
   </div>
 </div>
 
+<!-- DELETE USER MODAL -->
+<div class="modal-overlay" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="modal-box">
+    <div class="modal-title">&#9888; Delete Account</div>
+    <div class="modal-sub" id="delSubtitle">Permanently delete this account. This cannot be undone.</div>
+    <div class="modal-balance" id="delBalanceInfo" style="display:none;">
+      Current balance: <strong id="delBalanceAmt"></strong> &mdash; choose how to handle the funds:
+    </div>
+    <div id="delTransferSection" style="display:none;">
+      <div class="modal-section">
+        <label>&#10148; Transfer balance to account / phone</label>
+        <input type="text" id="delTransferTo" placeholder="NIDHI1234567890 or +919876543210"/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-success btn-sm" onclick="confirmDeleteUser('transfer')">Transfer &amp; Delete</button>
+        <button class="btn btn-warn btn-sm" onclick="confirmDeleteUser('withdraw')">Absorb &amp; Delete</button>
+        <button class="btn btn-grey btn-sm" onclick="closeDeleteModal()">Cancel</button>
+      </div>
+    </div>
+    <div id="delNoBalanceSection" style="display:none;">
+      <div class="modal-actions">
+        <button class="btn btn-danger" onclick="confirmDeleteUser('none')">Yes, Delete Account</button>
+        <button class="btn btn-grey" onclick="closeDeleteModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 <script>
 let currentUserId=null,currentUser=null,allUsers=[],allTx=[];
@@ -318,6 +369,9 @@ function copyAcct(){const acct=document.getElementById('pAcct').textContent;navi
 let _netBackendUrl='';
 async function loadNetworkInfo(){try{const s=await fetch('/api/server-info').then(r=>r.json());_netBackendUrl=s.backendUrl||'';document.getElementById('netUrl').textContent=s.backendUrl||'unknown';document.getElementById('netBankUrl').textContent=s.bankUrl||'unknown';document.getElementById('netIp').textContent=s.localIp||'unknown';const qr=document.getElementById('netQrImg'),fb=document.getElementById('netQrFallback');if(s.backendUrl){const qrUrl='https://chart.googleapis.com/chart?cht=qr&chs=160x160&chl='+encodeURIComponent(s.backendUrl)+'&choe=UTF-8';qr.src=qrUrl;qr.onload=()=>{qr.style.display='block';fb.style.display='none';};qr.onerror=()=>{fb.textContent=s.backendUrl;fb.style.fontSize='0.75rem';};}}catch(e){document.getElementById('netUrl').textContent='Could not detect IP — check Spring Boot is running';console.error('Network info error:',e);}}
 function copyNetUrl(){if(_netBackendUrl){navigator.clipboard.writeText(_netBackendUrl).then(()=>toast('Backend URL copied!','ok'));}}
+function deleteUser(){if(!currentUserId||!currentUser)return;const bal=currentUser.balancePaise||0;document.getElementById('delSubtitle').textContent='Delete account of '+currentUser.fullName+' ('+currentUser.accountNumber+')? This action is permanent and cannot be undone.';document.getElementById('delTransferTo').value='';if(bal>0){document.getElementById('delBalanceInfo').style.display='block';document.getElementById('delBalanceAmt').textContent=fmtRupees(bal);document.getElementById('delTransferSection').style.display='block';document.getElementById('delNoBalanceSection').style.display='none';}else{document.getElementById('delBalanceInfo').style.display='none';document.getElementById('delTransferSection').style.display='none';document.getElementById('delNoBalanceSection').style.display='block';}document.getElementById('deleteModal').classList.add('show');}
+function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('show');}
+async function confirmDeleteUser(action){if(!currentUserId)return;const transferTo=action==='transfer'?document.getElementById('delTransferTo').value.trim():null;if(action==='transfer'&&(!transferTo)){toast('Enter a target account number or phone','err');return;}const name=currentUser?.fullName||'user';try{const res=await fetch('/admin/users/'+currentUserId+'/delete-permanent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,transferToAccount:transferTo||null})});const data=await res.json();if(!res.ok){toast(data.error||'Delete failed','err');return;}toast('Account deleted: '+name,'ok');closeDeleteModal();closePanel();await Promise.all([loadUsers(),loadStats(),loadTxAll()]);}catch(e){toast('Network error during delete','err');}}
 (async function init(){await Promise.all([loadNetworkInfo(),loadUsers(),loadTxAll(),loadStats()]);setInterval(()=>loadStats(),15000);})();
 </script>
 </body>

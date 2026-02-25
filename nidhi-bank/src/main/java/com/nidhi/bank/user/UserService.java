@@ -113,6 +113,34 @@ public class UserService {
         });
     }
 
+    /**
+     * Permanently hard-deletes a user.
+     * If transferToAccount is provided, remaining balance is moved there first.
+     * If null ("withdraw" / zero-balance case), the balance is simply absorbed.
+     */
+    @Transactional
+    public void deleteUserPermanent(Long id, String transferToAccount) {
+        BankUser user = userRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+        long balance = user.getBalancePaise();
+        if (balance > 0 && transferToAccount != null && !transferToAccount.isBlank()) {
+            BankUser target = userRepo.findByAccountNumber(transferToAccount)
+                    .or(() -> userRepo.findByPhone(transferToAccount))
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Target account not found: " + transferToAccount));
+            if (target.getId().equals(id)) {
+                throw new IllegalArgumentException("Cannot transfer to the same account");
+            }
+            target.setBalancePaise(target.getBalancePaise() + balance);
+            userRepo.save(target);
+            log.info("Transferred {}p from deleted user {} to {}",
+                    balance, user.getFullName(), target.getFullName());
+        }
+        userRepo.deleteById(id);
+        log.info("User permanently deleted: {} | id={} | balance was={}p | transferredTo={}",
+                user.getFullName(), id, balance, transferToAccount);
+    }
+
     public StatsResponse getStats() {
         long totalUsers = userRepo.countByActive(true);
         Long totalBalance = userRepo.sumAllBalances();
