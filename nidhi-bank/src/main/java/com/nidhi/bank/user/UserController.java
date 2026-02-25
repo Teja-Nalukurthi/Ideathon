@@ -59,23 +59,23 @@ public class UserController {
         return ResponseEntity.ok(Map.of("status", "deactivated"));
     }
 
-    /** PUT /admin/users/{id}/toggle — activate or deactivate account */
+    /** PUT /admin/users/{id}/toggle — activate or deactivate account — returns full user */
     @PutMapping("/admin/users/{id}/toggle")
     public ResponseEntity<?> toggleUser(@PathVariable Long id) {
         try {
             BankUser u = userService.toggleActive(id);
-            return ResponseEntity.ok(Map.of("active", u.isActive(), "fullName", u.getFullName()));
+            return ResponseEntity.ok(u);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    /** PUT /admin/users/{id}/reset-device — wipe TEE/device link */
+    /** PUT /admin/users/{id}/reset-device — wipe TEE/device link — returns full user */
     @PutMapping("/admin/users/{id}/reset-device")
     public ResponseEntity<?> resetDevice(@PathVariable Long id) {
         try {
             BankUser u = userService.resetDevice(id);
-            return ResponseEntity.ok(Map.of("status", "device_reset", "fullName", u.getFullName()));
+            return ResponseEntity.ok(u);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

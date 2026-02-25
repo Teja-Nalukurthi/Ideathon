@@ -171,9 +171,11 @@ public class TransferService {
     }
 
     public DashboardStats getDashboardStats() {
-        long txToday = txRepo.countByCreatedAtAfter(Instant.now().minusSeconds(86400));
-        Long volToday = txRepo.sumSuccessfulAmountAfter(Instant.now().minusSeconds(86400));
-        return new DashboardStats(txToday, volToday != null ? volToday : 0L);
+        long txLast24h  = txRepo.countByCreatedAtAfter(Instant.now().minusSeconds(86400));
+        Long vol        = txRepo.sumSuccessfulAmountAfter(Instant.now().minusSeconds(86400));
+        long totalUsers  = userRepo.count();
+        long activeUsers = userRepo.countByActive(true);
+        return new DashboardStats(totalUsers, activeUsers, txLast24h, vol != null ? vol : 0L);
     }
 
     // ── DTOs ──────────────────────────────────────────────────────
@@ -195,5 +197,5 @@ public class TransferService {
         }
     }
 
-    public record DashboardStats(long transactionsToday, long volumePaiseToday) {}
+    public record DashboardStats(long totalUsers, long activeUsers, long txLast24h, long totalVolumePaise) {}
 }
