@@ -38,7 +38,64 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull() ?: return@registerForActivityResult
-        binding.etInput.setText(text)
+        // if the recognized text looks like a command, handle locally instead of treating it as a transaction
+        if (!handleVoiceCommand(text)) {
+            binding.etInput.setText(text)
+        }
+    }
+
+    /**
+     * Returns true if the text was consumed as a command.
+     */
+    private fun handleVoiceCommand(raw: String): Boolean {
+        val lower = raw.lowercase()
+        val acct = SessionManager.get(this)?.accountNumber ?: return false
+        when {
+            lower.contains("balance") -> {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        val info = NidhiClient.api(this@MainActivity).getAccountInfo(acct)
+                        val rupee = formatRupees(info.balancePaise)
+                        withContext(Dispatchers.Main) {
+                            speakConfirmation("Your account balance is $rupee")
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            speakConfirmation("Unable to fetch balance. Check your connection.")
+                        }
+                    }
+                }
+                return true
+            }
+            lower.contains("transaction") || lower.contains("history") -> {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        val txs = NidhiClient.api(this@MainActivity).getTransactions(acct)
+                        val summary = if (txs.isEmpty()) {
+                            "You have no recent transactions."
+                        } else {
+                            txs.take(3).map { tx ->
+                                val amt = formatRupees(tx.amountPaise)
+                                if (tx.toAccount == acct) {
+                                    "received $amt from ${tx.fromName ?: tx.fromAccount ?: "someone"}"
+                                } else {
+                                    "sent $amt to ${tx.toName ?: tx.toAccount ?: "someone"}"
+                                }
+                            }.joinToString("; ")
+                        }
+                        withContext(Dispatchers.Main) {
+                            speakConfirmation("Here are your latest transactions: $summary")
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            speakConfirmation("Could not load transactions. Try again later.")
+                        }
+                    }
+                }
+                return true
+            }
+            else -> return false
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
