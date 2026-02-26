@@ -2,6 +2,7 @@ package com.nidhi.transaction;
 
 import com.nidhi.challenge.ChallengeEngine;
 import com.nidhi.dashboard.AuditLog;
+import com.nidhi.push.PushNotificationService;
 import com.nidhi.voice.VoiceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,6 +23,7 @@ public class TransactionService {
     private final AuditLog auditLog;
     private final WebClient bankClient;
     private final WebClient fcmWebClient;
+    private final PushNotificationService pushService;
 
     @Value("${bank.internal.secret:nidhi-internal-secret-2026}")
     private String bankSecret;
@@ -30,12 +32,14 @@ public class TransactionService {
                               ChallengeEngine challengeEngine,
                               AuditLog auditLog,
                               @Qualifier("bankWebClient") WebClient bankClient,
-                              @Qualifier("fcmWebClient") WebClient fcmWebClient) {
+                              @Qualifier("fcmWebClient") WebClient fcmWebClient,
+                              PushNotificationService pushService) {
         this.voiceService    = voiceService;
         this.challengeEngine = challengeEngine;
         this.auditLog        = auditLog;
         this.bankClient      = bankClient;
         this.fcmWebClient    = fcmWebClient;
+        this.pushService     = pushService;
     }
 
     public InitiateResponse initiate(InitiateRequest req) {
@@ -92,17 +96,27 @@ public class TransactionService {
             return ConfirmResponse.error("BANK_TRANSFER_FAILED", bankResult.errorMessage());
         }
 
-        // fire off push notification to recipient if they have a token
+        // fire off push notification to recipient
         try {
-            Map info = bankClient.get()
+            @SuppressWarnings("unchecked")
+            Map<String, Object> info = bankClient.get()
                     .uri(u -> u.path("/bank/account/info").queryParam("account", recipient).build())
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
             if (info != null) {
-                String token = (String) info.get("fcmToken");
-                if (token != null && !token.isBlank()) {
-                    sendPushNotification(token, formatted, recipient);
+                String recipientAccount = (String) info.getOrDefault("accountNumber", recipient);
+                String recipientName    = (String) info.getOrDefault("fullName", recipient);
+                String notifMsg = "\uD83D\uDCB0 You received " + formatted +
+                        " from " + recipientName + " (ref: " + ref + ")";
+
+                // 1. SSE — instant, works while app is open
+                pushService.push(recipientAccount, notifMsg);
+
+                // 2. FCM — works if Firebase is configured
+                String fcmToken = (String) info.get("fcmToken");
+                if (fcmToken != null && !fcmToken.isBlank()) {
+                    sendPushNotification(fcmToken, formatted, recipientAccount);
                 }
             }
         } catch (Exception e) {

@@ -90,7 +90,26 @@ class HomeActivity : AppCompatActivity() {
         if (SessionManager.isLoggedIn(this)) {
             fetchAccountInfo()
             checkForNewTransactions()
+            // Connect SSE for real-time push from bank server
+            val acct = SessionManager.get(this)?.accountNumber
+            if (!acct.isNullOrBlank()) {
+                NidhiSseClient.connect(this, acct) { message ->
+                    runOnUiThread {
+                        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
+                            .setAction("View") {
+                                startActivity(Intent(this, TransactionHistoryActivity::class.java))
+                            }.show()
+                        // Refresh balance to show updated amount
+                        fetchAccountInfo()
+                    }
+                }
+            }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        NidhiSseClient.disconnect()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
