@@ -10,138 +10,173 @@
     --accent: #00e5a0; --accent2: #00b4d8; --warn: #ff9800;
     --error: #f44336; --text: #e0e0e0; --muted: #7a7a9a;
     --border: #2a2a4a; --success: #4caf50; --credit: #00e5a0; --debit: #f44336;
+    --panel-w: 460px;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; overflow-x: hidden; }
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
-  header h1 { font-size: 1.3rem; color: var(--accent); letter-spacing: 2px; }
-  .header-right { display: flex; align-items: center; gap: 12px; }
-  .header-badge { background: #1e3a2f; color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--accent); }
-  #clock { font-size: 0.75rem; color: var(--muted); }
-  .main { display: flex; flex-direction: column; transition: margin-right 0.35s ease; }
-  .main.panel-open { margin-right: 460px; }
-  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 20px 24px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
-  .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-  .stat-value { font-size: 1.6rem; font-weight: 700; margin-top: 6px; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; gap: 12px; }
+  header h1 { font-size: 1.15rem; color: var(--accent); letter-spacing: 2px; white-space: nowrap; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .header-badge { background: #1e3a2f; color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; border: 1px solid var(--accent); white-space: nowrap; }
+  #clock { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .main { transition: margin-right 0.3s ease; min-width: 0; }
+  .main.panel-open { margin-right: var(--panel-w); }
+
+  .stats-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; padding: 18px 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; min-width: 0; }
+  .stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat-value { font-size: 1.5rem; font-weight: 700; margin-top: 6px; line-height: 1; }
   .stat-value.green { color: var(--accent); } .stat-value.blue { color: var(--accent2); }
-  .stat-value.orange { color: var(--warn); } .stat-value.red { color: var(--error); }
-  .content { padding: 0 24px 24px; }
-  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .section-title { font-size: 1rem; font-weight: 600; color: var(--accent2); letter-spacing: 1px; }
-  .reg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .stat-value.orange { color: var(--warn); }  .stat-value.red   { color: var(--error); }
+
+  .content { padding: 0 20px 28px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .section-title { font-size: 0.95rem; font-weight: 600; color: var(--accent2); letter-spacing: 1px; }
+
+  .reg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 22px; }
   .reg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-group label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
-  .form-group input, .form-group select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; border-radius: 6px; font-size: 0.9rem; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .form-group label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .form-group input, .form-group select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; border-radius: 6px; font-size: 0.88rem; width: 100%; }
   .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent2); }
   .reg-footer { margin-top: 14px; display: flex; justify-content: flex-end; }
-  .btn { border: none; border-radius: 6px; padding: 9px 22px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: opacity 0.2s; }
-  .btn:hover { opacity: 0.85; }
+
+  .btn { border: none; border-radius: 6px; padding: 9px 20px; cursor: pointer; font-size: 0.88rem; font-weight: 600; transition: opacity .2s, transform .1s; white-space: nowrap; }
+  .btn:hover { opacity: .85; } .btn:active { transform: scale(.97); }
   .btn-primary { background: var(--accent2); color: #000; }
   .btn-success { background: var(--credit); color: #000; }
   .btn-danger  { background: var(--debit); color: #fff; }
   .btn-warn    { background: var(--warn); color: #000; }
   .btn-grey    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-  .btn-sm { padding: 5px 14px; font-size: 0.8rem; }
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
-  table { width: 100%; border-collapse: collapse; }
-  thead th { background: var(--surface2); padding: 12px 14px; font-size: 0.7rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; text-align: left; }
-  tbody tr { border-top: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+  .btn-sm { padding: 5px 13px; font-size: .78rem; }
+
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 22px; width: 100%; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; min-width: 640px; }
+  thead th { background: var(--surface2); padding: 11px 13px; font-size: .68rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; text-align: left; white-space: nowrap; }
+  tbody tr { border-top: 1px solid var(--border); cursor: pointer; transition: background .12s; }
   tbody tr:hover { background: var(--surface2); }
   tbody tr.selected { background: #1a2b35 !important; border-left: 3px solid var(--accent2); }
-  td { padding: 12px 14px; font-size: 0.88rem; }
-  .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
-  .badge-active { background: #1e3a2f; color: var(--accent); }
+  td { padding: 11px 13px; font-size: .85rem; vertical-align: middle; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: .7rem; font-weight: 600; white-space: nowrap; }
+  .badge-active   { background: #1e3a2f; color: var(--accent); }
   .badge-inactive { background: #3a1e1e; color: var(--error); }
-  .badge-tee { background: #1a2b35; color: var(--accent2); }
-  .badge-notee { background: #2a2a1a; color: var(--warn); }
-  .tx-table td { font-size: 0.82rem; }
+  .badge-tee      { background: #1a2b35; color: var(--accent2); }
+  .badge-notee    { background: #2a2a1a; color: var(--warn); }
+  .tx-table td    { font-size: .8rem; }
   .tx-cr { color: var(--credit); } .tx-dr { color: var(--debit); } .tx-tr { color: var(--accent2); }
-  #panel { position: fixed; right: -460px; top: 0; bottom: 0; width: 460px; background: var(--surface); border-left: 1px solid var(--border); z-index: 200; display: flex; flex-direction: column; transition: right 0.35s ease; overflow: hidden; }
+
+  #panel { position: fixed; right: calc(-1 * var(--panel-w)); top: 0; bottom: 0; width: var(--panel-w); max-width: 100vw; background: var(--surface); border-left: 1px solid var(--border); z-index: 200; display: flex; flex-direction: column; transition: right .3s ease; overflow: hidden; }
   #panel.open { right: 0; }
-  .panel-head { padding: 18px 20px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-  .avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent2), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; color: #000; flex-shrink: 0; }
-  .panel-name { font-size: 1.05rem; font-weight: 700; }
-  .panel-phone { font-size: 0.8rem; color: var(--muted); }
-  .panel-close { margin-left: auto; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; padding: 6px; border-radius: 4px; }
+  .panel-head { padding: 16px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg,var(--accent2),var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; color: #000; flex-shrink: 0; }
+  .panel-name  { font-size: 1rem; font-weight: 700; }
+  .panel-phone { font-size: .78rem; color: var(--muted); }
+  .panel-close { margin-left: auto; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; padding: 6px 8px; border-radius: 4px; line-height: 1; flex-shrink: 0; }
   .panel-close:hover { color: var(--text); background: var(--surface2); }
-  .panel-body { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; }
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .info-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
-  .info-label { font-size: 0.65rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; }
-  .info-val { font-size: 0.9rem; font-weight: 600; margin-top: 3px; }
-  .info-val.big { font-size: 1.4rem; color: var(--accent); }
-  .acct-copy { display: flex; align-items: center; gap: 8px; }
-  .copy-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; }
+  .panel-body { flex: 1; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 16px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .info-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+  .info-label { font-size: .63rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; }
+  .info-val { font-size: .88rem; font-weight: 600; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; }
+  .info-val.big { font-size: 1.3rem; color: var(--accent); }
+  .acct-copy { display: flex; align-items: center; gap: 6px; overflow: hidden; }
+  .acct-copy .info-val { font-size: .75rem; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .copy-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .78rem; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
   .copy-btn:hover { color: var(--accent2); background: var(--border); }
-  .psec { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
-  .psec-title { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
-  .psec-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
-  .adj-inputs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
-  .adj-inputs input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; border-radius: 6px; font-size: 0.9rem; width: 100%; }
+  .psec { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; }
+  .psec-title { font-size: .7rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; margin-bottom: 11px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+  .psec-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .adj-inputs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .adj-inputs input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 11px; border-radius: 6px; font-size: .88rem; width: 100%; }
   .adj-inputs input:focus { outline: none; border-color: var(--accent2); }
-  .adj-btns { display: flex; gap: 10px; }
+  .adj-btns { display: flex; gap: 8px; }
   .adj-btns .btn { flex: 1; }
-  .tee-info { font-size: 0.8rem; color: var(--muted); word-break: break-all; }
-  .tee-setup { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
-  .tee-setup ol { padding-left: 18px; }
-  .tee-setup li { margin-bottom: 4px; }
-  .ptx-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .tee-info  { font-size: .78rem; color: var(--muted); word-break: break-all; line-height: 1.6; }
+  .tee-setup { font-size: .8rem; color: var(--muted); line-height: 1.6; }
+  .tee-setup ol { padding-left: 16px; margin-top: 6px; }
+  .tee-setup li { margin-bottom: 3px; }
+  .ptx-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
   .ptx-item:last-child { border-bottom: none; }
-  .ptx-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+  .ptx-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .82rem; flex-shrink: 0; }
   .ptx-icon.cr { background: #1e3a2f; color: var(--accent); }
   .ptx-icon.dr { background: #3a1e1e; color: var(--error); }
   .ptx-icon.tr { background: #1a2b35; color: var(--accent2); }
-  .ptx-body { flex: 1; }
-  .ptx-ref { font-size: 0.72rem; color: var(--muted); }
-  .ptx-desc { font-size: 0.85rem; font-weight: 600; margin: 2px 0; }
-  .ptx-note { font-size: 0.75rem; color: var(--muted); font-style: italic; }
-  .ptx-amount { text-align: right; }
-  .ptx-amount .amt { font-size: 0.95rem; font-weight: 700; }
-  .ptx-date { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
-  .empty-state { text-align: center; color: var(--muted); padding: 20px; font-size: 0.85rem; }
-  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 22px; border-radius: 20px; font-size: 0.85rem; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-  #toast.show { opacity: 1; } #toast.ok { border-color: var(--accent); color: var(--accent); } #toast.err { border-color: var(--error); color: var(--error); }
-  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  /* ── NETWORK CARD ── */
-  .net-card { background: linear-gradient(135deg, #0d1f2d 0%, #0d2a1f 100%); border: 1px solid var(--accent2); border-radius: 14px; margin: 16px 24px 0; padding: 20px 24px; display: flex; align-items: center; gap: 24px; }
-  .net-left { flex: 1; }
-  .net-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent2); margin-bottom: 10px; }
-  .net-url { font-family: monospace; font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
-  .net-url-copy { background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; cursor: pointer; }
+  .ptx-body  { flex: 1; min-width: 0; }
+  .ptx-ref   { font-size: .68rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ptx-desc  { font-size: .83rem; font-weight: 600; margin: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ptx-note  { font-size: .72rem; color: var(--muted); font-style: italic; }
+  .ptx-amount{ text-align: right; flex-shrink: 0; }
+  .ptx-amount .amt { font-size: .92rem; font-weight: 700; }
+  .ptx-date  { font-size: .66rem; color: var(--muted); margin-top: 2px; }
+  .empty-state { text-align: center; color: var(--muted); padding: 18px; font-size: .83rem; }
+
+  #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 9px 22px; border-radius: 20px; font-size: .83rem; z-index: 999; opacity: 0; pointer-events: none; transition: opacity .25s; white-space: nowrap; max-width: calc(100vw - 40px); overflow: hidden; text-overflow: ellipsis; }
+  #toast.show { opacity: 1; }
+  #toast.ok   { border-color: var(--accent); color: var(--accent); }
+  #toast.err  { border-color: var(--error);  color: var(--error);  }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .net-card { background: linear-gradient(135deg,#0d1f2d 0%,#0d2a1f 100%); border: 1px solid var(--accent2); border-radius: 14px; margin: 16px 20px 0; padding: 18px 22px; display: flex; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+  .net-left  { flex: 1; min-width: 220px; }
+  .net-title { font-size: .72rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent2); margin-bottom: 8px; }
+  .net-url   { font-family: monospace; font-size: 1rem; font-weight: 700; color: var(--accent); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; word-break: break-all; }
+  .net-url-copy { background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: 4px; padding: 2px 8px; font-size: .72rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
   .net-url-copy:hover { background: var(--accent); color: #000; }
-  .net-subs { font-size: 0.78rem; color: var(--muted); line-height: 1.8; }
+  .net-subs  { font-size: .76rem; color: var(--muted); line-height: 1.8; }
   .net-subs span { color: var(--text); font-weight: 600; }
-  .net-hotspot { margin-top: 10px; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 10px; }
-  .net-hotspot ol { padding-left: 16px; margin-top: 4px; }
+  .net-hotspot { margin-top: 10px; font-size: .76rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 10px; }
+  .net-hotspot ol { padding-left: 15px; margin-top: 4px; }
   .net-hotspot li { margin-bottom: 3px; }
-  .net-qr { flex-shrink: 0; text-align: center; }
-  .net-qr img { border-radius: 8px; background: #fff; padding: 6px; display: block; }
-  .net-qr-label { font-size: 0.65rem; color: var(--muted); margin-top: 6px; text-align: center; }
-  .net-loading { color: var(--muted); font-size: 0.85rem; }
-  /* ── DELETE MODAL ── */
-  .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:600;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s; }
-  .modal-overlay.show { opacity:1;pointer-events:all; }
-  .modal-box { background:var(--surface);border:1px solid #4a1e1e;border-radius:14px;padding:28px 24px;width:460px;max-width:calc(100vw - 40px); }
-  .modal-title { font-size:1.1rem;font-weight:700;color:var(--error);margin-bottom:6px; }
-  .modal-sub { font-size:0.85rem;color:var(--muted);margin-bottom:16px;line-height:1.6; }
-  .modal-balance { background:#2a1010;border:1px solid #6a2a2a;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.9rem; }
-  .modal-balance strong { color:var(--error); }
-  .modal-section { margin-bottom:14px; }
-  .modal-section label { font-size:0.72rem;text-transform:uppercase;color:var(--muted);letter-spacing:1px;display:block;margin-bottom:6px; }
-  .modal-section input { width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:0.88rem; }
-  .modal-section input:focus { outline:none;border-color:var(--error); }
-  .modal-sep { display:flex;align-items:center;gap:10px;margin:12px 0;color:var(--muted);font-size:0.75rem; }
-  .modal-sep::before,.modal-sep::after { content:'';flex:1;height:1px;background:var(--border); }
-  .modal-actions { display:flex;gap:10px;margin-top:20px;flex-wrap:wrap; }
-  .modal-actions .btn { flex:1;min-width:120px; }
-  /* ── EDIT PROFILE MODAL ── */
-  .edit-modal-box { background:var(--surface);border:1px solid var(--accent2);border-radius:14px;padding:28px 24px;width:480px;max-width:calc(100vw - 40px); }
-  .edit-modal-box .modal-title { color:var(--accent2); }
-  .edit-modal-box select { width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:0.88rem; }
-  .edit-modal-box select:focus { outline:none;border-color:var(--accent2); }
-  .edit-modal-box input:focus { border-color:var(--accent2); }
+  .net-qr    { flex-shrink: 0; text-align: center; align-self: flex-start; }
+  .net-qr img{ border-radius: 8px; background: #fff; padding: 5px; display: block; max-width: 140px; height: auto; }
+  .net-qr-label { font-size: .63rem; color: var(--muted); margin-top: 5px; }
+  .net-loading { color: var(--muted); font-size: .83rem; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.78); z-index: 600; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; padding: 16px; }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal-box { background: var(--surface); border: 1px solid #4a1e1e; border-radius: 14px; padding: 24px; width: 100%; max-width: 460px; max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-title { font-size: 1.05rem; font-weight: 700; color: var(--error); margin-bottom: 6px; }
+  .modal-sub   { font-size: .83rem; color: var(--muted); margin-bottom: 14px; line-height: 1.6; }
+  .modal-balance { background: #2a1010; border: 1px solid #6a2a2a; border-radius: 8px; padding: 10px 13px; margin-bottom: 14px; font-size: .88rem; }
+  .modal-balance strong { color: var(--error); }
+  .modal-section { margin-bottom: 13px; }
+  .modal-section label { font-size: .7rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; display: block; margin-bottom: 5px; }
+  .modal-section input, .modal-section select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 6px; font-size: .86rem; }
+  .modal-section input:focus, .modal-section select:focus { outline: none; border-color: var(--error); }
+  .modal-sep { display: flex; align-items: center; gap: 10px; margin: 11px 0; color: var(--muted); font-size: .72rem; }
+  .modal-sep::before,.modal-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+  .modal-actions .btn { flex: 1; min-width: 100px; text-align: center; }
+  .edit-modal-box { border-color: var(--accent2); }
+  .edit-modal-box .modal-title { color: var(--accent2); }
+  .edit-modal-box .modal-section input:focus,
+  .edit-modal-box .modal-section select:focus { border-color: var(--accent2); }
+
+  @media (max-width: 900px) {
+    .main.panel-open { margin-right: 0; }
+    #panel { box-shadow: -8px 0 40px rgba(0,0,0,.7); }
+  }
+  @media (max-width: 700px) {
+    .stats-bar { grid-template-columns: 1fr 1fr; }
+    .reg-grid  { grid-template-columns: 1fr; }
+    header h1  { font-size: .95rem; letter-spacing: 1px; }
+    .header-badge { display: none; }
+    .net-qr    { display: none; }
+    .stat-value{ font-size: 1.2rem; }
+    .content, .stats-bar { padding-left: 12px; padding-right: 12px; }
+  }
+  @media (max-width: 480px) {
+    .stats-bar { gap: 8px; padding: 12px; }
+    #panel     { width: 100vw; --panel-w: 100vw; }
+    .adj-btns  { flex-direction: column; }
+    .modal-actions .btn { min-width: 80px; }
+  }
 </style>
 </head>
 <body>
@@ -156,23 +191,23 @@
 <div id="panel">
   <div class="panel-head">
     <div class="avatar" id="pAvatar">--</div>
-    <div>
-      <div class="panel-name" id="pName">&mdash;</div>
+    <div style="min-width:0;overflow:hidden;">
+      <div class="panel-name"  id="pName">&mdash;</div>
       <div class="panel-phone" id="pPhone">&mdash;</div>
     </div>
     <button class="panel-close" onclick="closePanel()">&#10005;</button>
   </div>
   <div class="panel-body">
     <div class="info-grid">
-      <div class="info-item" style="grid-column: span 2;">
+      <div class="info-item" style="grid-column:span 2;">
         <div class="info-label">Balance</div>
         <div class="info-val big" id="pBal">&#8377;0</div>
       </div>
       <div class="info-item">
         <div class="info-label">Account No.</div>
         <div class="acct-copy">
-          <div class="info-val" id="pAcct" style="font-size:0.78rem;">&mdash;</div>
-          <button class="copy-btn" onclick="copyAcct()">&#9109;</button>
+          <div class="info-val" id="pAcct">&mdash;</div>
+          <button class="copy-btn" onclick="copyAcct()" title="Copy">&#9109;</button>
         </div>
       </div>
       <div class="info-item">
@@ -185,20 +220,20 @@
       </div>
       <div class="info-item">
         <div class="info-label">Joined</div>
-        <div class="info-val" id="pJoined" style="font-size:0.78rem;">&mdash;</div>
+        <div class="info-val" id="pJoined" style="font-size:.75rem;">&mdash;</div>
       </div>
     </div>
     <div class="psec">
       <div class="psec-title">Profile Details</div>
       <div class="psec-row">
-        <span style="font-size:0.85rem;color:var(--muted);">Name &bull; Phone &bull; Language &bull; PIN</span>
+        <span style="font-size:.83rem;color:var(--muted);">Name &bull; Phone &bull; Language &bull; PIN</span>
         <button class="btn btn-primary btn-sm" onclick="editProfile()">&#9998; Edit</button>
       </div>
     </div>
     <div class="psec">
       <div class="psec-title">Account Control</div>
       <div class="psec-row">
-        <span style="font-size:0.85rem;">Suspend / Activate account</span>
+        <span style="font-size:.83rem;">Suspend / Activate account</span>
         <button class="btn btn-warn btn-sm" id="btnToggle" onclick="toggleUser()">Toggle</button>
       </div>
     </div>
@@ -206,11 +241,11 @@
       <div class="psec-title">Balance Adjustment</div>
       <div class="adj-inputs">
         <input type="number" id="adjAmount" placeholder="Amount in Rs (e.g. 500)" min="1" step="1"/>
-        <input type="text" id="adjNote" placeholder="Reason / note for this adjustment"/>
+        <input type="text"   id="adjNote"   placeholder="Reason / note for this adjustment"/>
       </div>
       <div class="adj-btns">
         <button class="btn btn-success" onclick="adjustBalance('credit')">+ Credit</button>
-        <button class="btn btn-danger"  onclick="adjustBalance('debit')">- Debit</button>
+        <button class="btn btn-danger"  onclick="adjustBalance('debit')">&#8722; Debit</button>
       </div>
     </div>
     <div class="psec">
@@ -227,16 +262,14 @@
     <div class="psec" style="border-color:#4a1e1e;">
       <div class="psec-title" style="color:var(--error);">&#9888; Danger Zone</div>
       <div class="psec-row">
-        <span style="font-size:0.85rem;">Permanently remove this account</span>
-        <button class="btn btn-danger btn-sm" onclick="deleteUser()">Delete Account</button>
+        <span style="font-size:.83rem;">Permanently remove this account</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser()">Delete</button>
       </div>
     </div>
   </div>
 </div>
 
 <div class="main" id="mainWrap">
-
-  <!-- NETWORK / DEVICE SETUP CARD -->
   <div class="net-card" id="netCard">
     <div class="net-left">
       <div class="net-title">&#128246; Device Connection Setup</div>
@@ -249,29 +282,30 @@
         Local IP: <span id="netIp">&mdash;</span>
       </div>
       <div class="net-hotspot">
-        <strong>&#128241; Phone Setup (WiFi / Hotspot):</strong>
+        <strong>&#128241; Phone Setup:</strong>
         <ol>
-          <li>On laptop: <strong>Settings &rarr; Mobile Hotspot</strong> &rarr; Turn On</li>
-          <li>Phone connects to the hotspot network</li>
-          <li>Open Nidhi app &rarr; <strong>&#8942; menu &rarr; Set Server URL</strong></li>
-          <li>Scan the QR code &rarr; or type the URL shown above &rarr; Save</li>
-          <li>Tap <strong>Send money</strong> &mdash; fully offline, sub-100ms!</li>
+          <li>Laptop: <strong>Settings &rarr; Mobile Hotspot</strong> &rarr; Turn On</li>
+          <li>Phone connects to the hotspot</li>
+          <li>Open Nidhi app &rarr; <strong>Change URL</strong></li>
+          <li>Type the URL above &rarr; Save</li>
+          <li>Tap <strong>Send money</strong> &mdash; sub-100ms!</li>
         </ol>
       </div>
     </div>
     <div class="net-qr">
-      <img id="netQrImg" src="" width="160" height="160" alt="QR" style="display:none;"/>
+      <img id="netQrImg" src="" width="140" height="140" alt="QR" style="display:none;"/>
       <div id="netQrFallback" class="net-loading">Loading QR&hellip;</div>
       <div class="net-qr-label">Scan with Nidhi app</div>
     </div>
   </div>
 
   <div class="stats-bar">
-    <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value blue" id="stUsers">&mdash;</div></div>
-    <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-value green" id="stActive">&mdash;</div></div>
-    <div class="stat-card"><div class="stat-label">Transactions (24h)</div><div class="stat-value orange" id="stTx24">&mdash;</div></div>
-    <div class="stat-card"><div class="stat-label">Total Volume</div><div class="stat-value green" id="stVol">&mdash;</div></div>
+    <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value blue"   id="stUsers">&mdash;</div></div>
+    <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-value green"  id="stActive">&mdash;</div></div>
+    <div class="stat-card"><div class="stat-label">Txns (24h)</div><div class="stat-value orange" id="stTx24">&mdash;</div></div>
+    <div class="stat-card"><div class="stat-label">Total Volume</div><div class="stat-value green"  id="stVol">&mdash;</div></div>
   </div>
+
   <div class="content">
     <div class="section-header"><div class="section-title">Register New User</div></div>
     <div class="reg-card">
@@ -287,34 +321,39 @@
           </select>
         </div>
         <div class="form-group"><label>Initial Balance (Rs)</label><input id="rBal" type="number" placeholder="1000" value="1000" min="0"/></div>
-        <div class="form-group"><label>PIN (4–6 digits)</label><input id="rPin" type="password" placeholder="e.g. 1234" maxlength="6"/></div>
+        <div class="form-group"><label>PIN (4-6 digits)</label><input id="rPin" type="password" placeholder="e.g. 1234" maxlength="6"/></div>
       </div>
       <div class="reg-footer"><button class="btn btn-primary" onclick="registerUser()">+ Register User</button></div>
     </div>
+
     <div class="section-header">
       <div class="section-title">All Users</div>
-      <button class="btn btn-grey btn-sm" onclick="loadUsers()">Refresh</button>
-    </div>
-    <div class="table-wrap" style="margin-bottom:24px;">
-      <table>
-        <thead><tr><th>Name</th><th>Phone</th><th>Account No.</th><th>Balance</th><th>Status</th><th>TEE</th><th>Joined</th></tr></thead>
-        <tbody id="userBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Loading...</td></tr></tbody>
-      </table>
-    </div>
-    <div class="section-header">
-      <div class="section-title">All Transactions</div>
-      <button class="btn btn-grey btn-sm" onclick="loadTxAll()">Refresh</button>
+      <button class="btn btn-grey btn-sm" onclick="loadUsers()">&#8635; Refresh</button>
     </div>
     <div class="table-wrap">
-      <table class="tx-table">
-        <thead><tr><th>Reference</th><th>Type</th><th>From</th><th>To</th><th>Amount</th><th>Status</th><th>Note</th><th>Time</th></tr></thead>
-        <tbody id="txBody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">Loading...</td></tr></tbody>
-      </table>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Account No.</th><th>Balance</th><th>Status</th><th>TEE</th><th>Joined</th></tr></thead>
+          <tbody id="userBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Loading&hellip;</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">All Transactions</div>
+      <button class="btn btn-grey btn-sm" onclick="loadTxAll()">&#8635; Refresh</button>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="tx-table">
+          <thead><tr><th>Reference</th><th>Type</th><th>From</th><th>To</th><th>Amount</th><th>Status</th><th>Note</th><th>Time</th></tr></thead>
+          <tbody id="txBody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">Loading&hellip;</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- EDIT PROFILE MODAL -->
 <div class="modal-overlay" id="editModal" onclick="if(event.target===this)closeEditModal()">
   <div class="modal-box edit-modal-box">
     <div class="modal-title">&#9998; Edit Profile</div>
@@ -330,36 +369,35 @@
       </select>
     </div>
     <div class="modal-section"><label>New PIN <span style="color:var(--muted);font-weight:400;">(leave blank to keep current)</span></label><input type="password" id="editPin" placeholder="4-6 digit PIN" maxlength="6"/></div>
-    <div class="modal-actions" style="margin-top:20px;">
+    <div class="modal-actions">
       <button class="btn btn-primary" onclick="saveEditProfile()">Save Changes</button>
-      <button class="btn btn-grey" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-grey"    onclick="closeEditModal()">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- DELETE USER MODAL -->
 <div class="modal-overlay" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
   <div class="modal-box">
     <div class="modal-title">&#9888; Delete Account</div>
     <div class="modal-sub" id="delSubtitle">Permanently delete this account. This cannot be undone.</div>
     <div class="modal-balance" id="delBalanceInfo" style="display:none;">
-      Current balance: <strong id="delBalanceAmt"></strong> &mdash; choose how to handle the funds:
+      Current balance: <strong id="delBalanceAmt"></strong> &mdash; choose how to handle funds:
     </div>
     <div id="delTransferSection" style="display:none;">
       <div class="modal-section">
         <label>&#10148; Transfer balance to account / phone</label>
-        <input type="text" id="delTransferTo" placeholder="NIDHI1234567890 or +919876543210"/>
+        <input type="text" id="delTransferTo" placeholder="NIDHI... or phone number"/>
       </div>
       <div class="modal-actions">
         <button class="btn btn-success btn-sm" onclick="confirmDeleteUser('transfer')">Transfer &amp; Delete</button>
-        <button class="btn btn-warn btn-sm" onclick="confirmDeleteUser('withdraw')">Absorb &amp; Delete</button>
-        <button class="btn btn-grey btn-sm" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-warn btn-sm"    onclick="confirmDeleteUser('withdraw')">Absorb &amp; Delete</button>
+        <button class="btn btn-grey btn-sm"    onclick="closeDeleteModal()">Cancel</button>
       </div>
     </div>
     <div id="delNoBalanceSection" style="display:none;">
       <div class="modal-actions">
         <button class="btn btn-danger" onclick="confirmDeleteUser('none')">Yes, Delete Account</button>
-        <button class="btn btn-grey" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-grey"   onclick="closeDeleteModal()">Cancel</button>
       </div>
     </div>
   </div>
@@ -367,54 +405,39 @@
 
 <div id="toast"></div>
 <script>
+"use strict";
 let currentUserId=null,currentUser=null,allUsers=[],allTx=[];
 function updateClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-IN',{hour12:false});}
 setInterval(updateClock,1000);updateClock();
-function toast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='show '+type;clearTimeout(el._t);el._t=setTimeout(()=>el.className='',3000);}
+function toast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='show '+(type||'');clearTimeout(el._t);el._t=setTimeout(()=>el.className='',3200);}
 function fmtRupees(p){const r=Math.floor(p/100),c=p%100;return 'Rs '+r.toLocaleString('en-IN')+(c?'.'+String(c).padStart(2,'0'):'');}
 function fmtDate(iso){if(!iso)return '-';return new Date(iso).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});}
-function initials(n){return(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function initials(n){return(n||'?').split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'?';}
 function txClass(t){if(t==='ADMIN_CREDIT')return 'tx-cr';if(t==='ADMIN_DEBIT')return 'tx-dr';return 'tx-tr';}
 function txLabel(t){if(t==='ADMIN_CREDIT')return '+CREDIT';if(t==='ADMIN_DEBIT')return '-DEBIT';return 'TRANSFER';}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-async function loadStats(){try{const s=await fetch('/admin/txstats').then(r=>r.json());document.getElementById('stUsers').textContent=s.totalUsers??'-';document.getElementById('stActive').textContent=s.activeUsers??'-';document.getElementById('stTx24').textContent=s.txLast24h??'-';document.getElementById('stVol').textContent=s.totalVolumePaise!=null?fmtRupees(s.totalVolumePaise):'-';}catch(e){}}
-async function loadUsers(){try{allUsers=await fetch('/admin/users').then(r=>r.json());const tb=document.getElementById('userBody');if(!allUsers.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No users yet</td></tr>';return;}tb.innerHTML=allUsers.map(u=>`<tr onclick="openPanel(${u.id})" ${u.id===currentUserId?'class="selected"':''}>
-<td><strong>${esc(u.fullName)}</strong></td><td>${esc(u.phone)}</td>
-<td style="font-family:monospace;font-size:0.8rem;">${esc(u.accountNumber)}</td>
-<td>${fmtRupees(u.balancePaise)}</td>
-<td><span class="badge ${u.active?'badge-active':'badge-inactive'}">${u.active?'ACTIVE':'INACTIVE'}</span></td>
-<td><span class="badge ${u.deviceId?'badge-tee':'badge-notee'}">${u.deviceId?'LINKED':'PENDING'}</span></td>
-<td style="font-size:0.78rem;">${fmtDate(u.createdAt)}</td></tr>`).join('');}catch(e){toast('Failed to load users','err');}}
-async function loadTxAll(){try{allTx=await fetch('/admin/transactions').then(r=>r.json());const tb=document.getElementById('txBody');if(!allTx.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No transactions yet</td></tr>';return;}tb.innerHTML=allTx.slice(0,200).map(t=>`<tr>
-<td style="font-family:monospace;font-size:0.75rem;">${esc(t.referenceId)}</td>
-<td><span class="${txClass(t.txType)}" style="font-weight:600;">${txLabel(t.txType)}</span></td>
-<td style="font-size:0.8rem;">${esc(t.fromName||t.fromAccount)}</td>
-<td style="font-size:0.8rem;">${esc(t.toName||t.toAccount)}</td>
-<td style="font-weight:700;" class="${txClass(t.txType)}">${fmtRupees(t.amountPaise)}</td>
-<td><span class="badge ${t.status==='SUCCESS'?'badge-active':'badge-inactive'}">${t.status}</span></td>
-<td style="font-size:0.77rem;color:var(--muted);">${esc(t.adminNote||'')}</td>
-<td style="font-size:0.75rem;">${fmtDate(t.createdAt)}</td></tr>`).join('');}catch(e){toast('Failed to load transactions','err');}}
-async function registerUser(){const name=document.getElementById('rName').value.trim(),phone=document.getElementById('rPhone').value.trim(),lang=document.getElementById('rLang').value,bal=parseInt(document.getElementById('rBal').value||'0',10),pin=document.getElementById('rPin').value.trim();if(!name||!phone){toast('Name and phone are required','err');return;}if(!pin||pin.length<4){toast('PIN must be at least 4 digits','err');return;}try{const res=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fullName:name,phone,languageCode:lang,initialBalancePaise:bal*100,pin})});const data=await res.json();if(!res.ok){toast(data.error||'Registration failed','err');return;}toast('Registered: '+data.accountNumber,'ok');['rName','rPhone','rPin'].forEach(id=>document.getElementById(id).value='');document.getElementById('rBal').value='1000';loadUsers();loadStats();}catch(e){toast('Network error','err');}}
-async function openPanel(userId){currentUserId=userId;document.getElementById('panel').classList.add('open');document.getElementById('mainWrap').classList.add('panel-open');document.querySelectorAll('#userBody tr').forEach(r=>r.classList.remove('selected'));document.querySelectorAll('#userBody tr').forEach(r=>{if(r.getAttribute('onclick')&&r.getAttribute('onclick').includes('('+userId+')')){r.classList.add('selected');}});try{currentUser=await fetch('/admin/users/'+userId).then(r=>r.json());renderPanel(currentUser);}catch(e){toast('Failed to load profile','err');}try{const txs=await fetch('/admin/users/'+userId+'/transactions').then(r=>r.json());renderPanelTx(txs);}catch(e){document.getElementById('pTxList').innerHTML='<div class="empty-state">Error loading transactions</div>';}}
+async function loadStats(){try{const s=await fetch('/admin/txstats').then(r=>r.json());document.getElementById('stUsers').textContent=s.totalUsers??'-';document.getElementById('stActive').textContent=s.activeUsers??'-';document.getElementById('stTx24').textContent=s.txLast24h??'-';document.getElementById('stVol').textContent=s.totalVolumePaise!=null?fmtRupees(s.totalVolumePaise):'-';}catch(_){}}
+async function loadUsers(){try{allUsers=await fetch('/admin/users').then(r=>r.json());const tb=document.getElementById('userBody');if(!allUsers.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No users yet</td></tr>';return;}tb.innerHTML=allUsers.map(u=>`<tr onclick="openPanel(${u.id})" ${u.id===currentUserId?'class="selected"':''}><td><strong>${esc(u.fullName)}</strong></td><td style="white-space:nowrap;">${esc(u.phone)}</td><td style="font-family:monospace;font-size:.78rem;white-space:nowrap;">${esc(u.accountNumber)}</td><td style="white-space:nowrap;">${fmtRupees(u.balancePaise)}</td><td><span class="badge ${u.active?'badge-active':'badge-inactive'}">${u.active?'ACTIVE':'INACTIVE'}</span></td><td><span class="badge ${u.deviceId?'badge-tee':'badge-notee'}">${u.deviceId?'LINKED':'PENDING'}</span></td><td style="font-size:.75rem;white-space:nowrap;">${fmtDate(u.createdAt)}</td></tr>`).join('');}catch(_){toast('Failed to load users','err');}}
+async function loadTxAll(){try{allTx=await fetch('/admin/transactions').then(r=>r.json());const tb=document.getElementById('txBody');if(!allTx.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No transactions yet</td></tr>';return;}tb.innerHTML=allTx.slice(0,200).map(t=>`<tr><td style="font-family:monospace;font-size:.73rem;white-space:nowrap;">${esc(t.referenceId)}</td><td style="white-space:nowrap;"><span class="${txClass(t.txType)}" style="font-weight:600;">${txLabel(t.txType)}</span></td><td style="font-size:.8rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.fromName||t.fromAccount)}</td><td style="font-size:.8rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.toName||t.toAccount)}</td><td style="font-weight:700;white-space:nowrap;" class="${txClass(t.txType)}">${fmtRupees(t.amountPaise)}</td><td><span class="badge ${t.status==='SUCCESS'?'badge-active':'badge-inactive'}">${t.status}</span></td><td style="font-size:.75rem;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.adminNote||'')}</td><td style="font-size:.73rem;white-space:nowrap;">${fmtDate(t.createdAt)}</td></tr>`).join('');}catch(_){toast('Failed to load transactions','err');}}
+async function registerUser(){const name=document.getElementById('rName').value.trim(),phone=document.getElementById('rPhone').value.trim(),lang=document.getElementById('rLang').value,bal=parseInt(document.getElementById('rBal').value||'0',10),pin=document.getElementById('rPin').value.trim();if(!name||!phone){toast('Name and phone are required','err');return;}if(!pin||pin.length<4){toast('PIN must be at least 4 digits','err');return;}try{const res=await fetch('/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fullName:name,phone,languageCode:lang,initialBalancePaise:bal*100,pin})});const data=await res.json();if(!res.ok){toast(data.error||'Registration failed','err');return;}toast('Registered: '+data.accountNumber,'ok');['rName','rPhone','rPin'].forEach(id=>document.getElementById(id).value='');document.getElementById('rBal').value='1000';loadUsers();loadStats();}catch(_){toast('Network error','err');}}
+async function openPanel(userId){currentUserId=userId;document.getElementById('panel').classList.add('open');document.getElementById('mainWrap').classList.add('panel-open');document.querySelectorAll('#userBody tr').forEach(r=>{r.classList.toggle('selected',r.getAttribute('onclick')==='openPanel('+userId+')');});document.getElementById('pTxList').innerHTML='<div class="empty-state">Loading...</div>';try{currentUser=await fetch('/admin/users/'+userId).then(r=>r.json());renderPanel(currentUser);}catch(_){toast('Failed to load profile','err');}try{const txs=await fetch('/admin/users/'+userId+'/transactions').then(r=>r.json());renderPanelTx(txs);}catch(_){document.getElementById('pTxList').innerHTML='<div class="empty-state">Error loading transactions</div>';}}
 function closePanel(){currentUserId=null;currentUser=null;document.getElementById('panel').classList.remove('open');document.getElementById('mainWrap').classList.remove('panel-open');document.querySelectorAll('#userBody tr').forEach(r=>r.classList.remove('selected'));}
-function renderPanel(u){document.getElementById('pAvatar').textContent=initials(u.fullName);document.getElementById('pName').textContent=u.fullName;document.getElementById('pPhone').textContent=u.phone;document.getElementById('pBal').textContent=fmtRupees(u.balancePaise);document.getElementById('pAcct').textContent=u.accountNumber;document.getElementById('pLang').textContent=(u.languageCode||'').toUpperCase()||'-';document.getElementById('pJoined').textContent=fmtDate(u.createdAt);document.getElementById('pStatus').innerHTML=`<span class="badge ${u.active?'badge-active':'badge-inactive'}">${u.active?'ACTIVE':'INACTIVE'}</span>`;document.getElementById('btnToggle').textContent=u.active?'Suspend':'Activate';document.getElementById('btnToggle').className='btn btn-sm '+(u.active?'btn-warn':'btn-success');const teeBadge=document.getElementById('teeBadge'),teeContent=document.getElementById('teeContent');if(u.deviceId){teeBadge.className='badge badge-tee';teeBadge.textContent='LINKED';teeContent.innerHTML=`<div class="tee-info" style="margin-bottom:10px;"><strong>Device ID:</strong> ${esc(u.deviceId)}<br/><strong>Registered:</strong> ${fmtDate(u.deviceRegisteredAt)}<br/><strong>Public Key:</strong> <span style="font-size:0.7rem;word-break:break-all;">${esc((u.publicKeyBase64||'').slice(0,64))}...</span></div><button class="btn btn-danger btn-sm" onclick="resetDevice()">Reset TEE Binding</button>`;}else{teeBadge.className='badge badge-notee';teeBadge.textContent='PENDING';teeContent.innerHTML=`<div class="tee-setup"><p style="color:var(--warn);margin-bottom:8px;">No device linked. User must complete setup from the mobile app.</p><ol><li>Open <strong>Project Nidhi</strong> app on phone</li><li>Tap menu &gt; Set Server URL and enter ngrok URL</li><li>On Home screen tap <strong>Setup TEE / Register Device</strong></li><li>App generates ECDSA key in Android Keystore</li><li>Device ID and public key sent to /bank/device/register</li><li>Status changes to LINKED automatically</li></ol></div>`;}}
-function renderPanelTx(txs){const el=document.getElementById('pTxList');if(!txs||!txs.length){el.innerHTML='<div class="empty-state">No transactions yet</div>';return;}el.innerHTML=txs.map(t=>{const isCr=t.txType==='ADMIN_CREDIT',isDr=t.txType==='ADMIN_DEBIT',cls=isCr?'cr':isDr?'dr':'tr',icon=isCr?'+':isDr?'-':'&harr;',amtColor=isCr?'var(--credit)':isDr?'var(--debit)':'var(--accent2)',sign=isCr?'+':isDr?'-':'',counterparty=isCr||isDr?(isCr?'Admin Credit':'Admin Debit'):(t.fromAccount===currentUser?.accountNumber?('to '+(t.toName||t.toAccount)):('from '+(t.fromName||t.fromAccount)));return `<div class="ptx-item"><div class="ptx-icon ${cls}">${icon}</div><div class="ptx-body"><div class="ptx-ref">${esc(t.referenceId)}</div><div class="ptx-desc">${esc(counterparty)}</div>${t.adminNote?`<div class="ptx-note">${esc(t.adminNote)}</div>`:''}</div><div class="ptx-amount"><div class="amt" style="color:${amtColor};">${sign}${fmtRupees(t.amountPaise)}</div><div class="ptx-date">${fmtDate(t.createdAt)}</div></div></div>`;}).join('');}
-async function toggleUser(){if(!currentUserId)return;try{const u=await fetch('/admin/users/'+currentUserId+'/toggle',{method:'PUT'}).then(r=>r.json());currentUser=u;renderPanel(u);toast(u.active?'Account activated':'Account suspended','ok');loadUsers();}catch(e){toast('Toggle failed','err');}}
-async function resetDevice(){if(!currentUserId)return;if(!confirm('Reset TEE binding for '+(currentUser?.fullName||'this user')+'? They will need to re-register.'))return;try{const u=await fetch('/admin/users/'+currentUserId+'/reset-device',{method:'PUT'}).then(r=>r.json());currentUser=u;renderPanel(u);toast('TEE binding reset','ok');loadUsers();}catch(e){toast('Reset failed','err');}}
-async function adjustBalance(action){if(!currentUserId)return;const amountRupees=parseFloat(document.getElementById('adjAmount').value),note=document.getElementById('adjNote').value.trim();if(!amountRupees||amountRupees<=0){toast('Enter a valid amount','err');return;}const amountPaise=Math.round(amountRupees*100),label=action==='credit'?'Credit':'Debit';if(!confirm(label+' Rs '+amountRupees.toLocaleString('en-IN')+' '+(action==='credit'?'to':'from')+' '+(currentUser?.fullName||'user')+'?\nNote: '+(note||'-')))return;try{const res=await fetch('/admin/account/'+currentUserId+'/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amountPaise,note})});const data=await res.json();if(!res.ok||data.error){toast(data.error||label+' failed','err');return;}toast(label+' successful! Ref: '+data.referenceId,'ok');document.getElementById('adjAmount').value='';document.getElementById('adjNote').value='';currentUser=await fetch('/admin/users/'+currentUserId).then(r=>r.json());renderPanel(currentUser);const txs=await fetch('/admin/users/'+currentUserId+'/transactions').then(r=>r.json());renderPanelTx(txs);loadUsers();loadTxAll();loadStats();}catch(e){toast('Network error','err');}}
-function copyAcct(){const acct=document.getElementById('pAcct').textContent;navigator.clipboard.writeText(acct).then(()=>toast('Copied: '+acct,'ok'));}
+function renderPanel(u){document.getElementById('pAvatar').textContent=initials(u.fullName);document.getElementById('pName').textContent=u.fullName;document.getElementById('pPhone').textContent=u.phone;document.getElementById('pBal').textContent=fmtRupees(u.balancePaise);document.getElementById('pAcct').textContent=u.accountNumber;document.getElementById('pLang').textContent=(u.languageCode||'').toUpperCase()||'-';document.getElementById('pJoined').textContent=fmtDate(u.createdAt);document.getElementById('pStatus').innerHTML=`<span class="badge ${u.active?'badge-active':'badge-inactive'}">${u.active?'ACTIVE':'INACTIVE'}</span>`;const btn=document.getElementById('btnToggle');btn.textContent=u.active?'Suspend':'Activate';btn.className='btn btn-sm '+(u.active?'btn-warn':'btn-success');const teeBadge=document.getElementById('teeBadge'),teeContent=document.getElementById('teeContent');if(u.deviceId){teeBadge.className='badge badge-tee';teeBadge.textContent='LINKED';teeContent.innerHTML=`<div class="tee-info"><strong>Device ID:</strong> ${esc(u.deviceId)}<br/><strong>Registered:</strong> ${fmtDate(u.deviceRegisteredAt)}</div><button class="btn btn-danger btn-sm" style="margin-top:10px;" onclick="resetDevice()">Reset TEE Binding</button>`;}else{teeBadge.className='badge badge-notee';teeBadge.textContent='PENDING';teeContent.innerHTML=`<div class="tee-setup"><p style="color:var(--warn);">No device linked yet.</p></div>`;}}
+function renderPanelTx(txs){const el=document.getElementById('pTxList');if(!txs||!txs.length){el.innerHTML='<div class="empty-state">No transactions yet</div>';return;}el.innerHTML=txs.map(t=>{const isCr=t.txType==='ADMIN_CREDIT',isDr=t.txType==='ADMIN_DEBIT',cls=isCr?'cr':isDr?'dr':'tr',icon=isCr?'+':isDr?'-':'&harr;',amtColor=isCr?'var(--credit)':isDr?'var(--debit)':'var(--accent2)',sign=isCr?'+':isDr?'-':'',cp=isCr?'Admin Credit':isDr?'Admin Debit':(t.fromAccount===currentUser?.accountNumber?('to '+(t.toName||t.toAccount)):('from '+(t.fromName||t.fromAccount)));return`<div class="ptx-item"><div class="ptx-icon ${cls}">${icon}</div><div class="ptx-body"><div class="ptx-ref">${esc(t.referenceId||'')}</div><div class="ptx-desc">${esc(cp)}</div>${t.adminNote?`<div class="ptx-note">${esc(t.adminNote)}</div>`:''}</div><div class="ptx-amount"><div class="amt" style="color:${amtColor};">${sign}${fmtRupees(t.amountPaise)}</div><div class="ptx-date">${fmtDate(t.createdAt)}</div></div></div>`;}).join('');}
+async function toggleUser(){if(!currentUserId)return;try{const u=await fetch('/admin/users/'+currentUserId+'/toggle',{method:'PUT'}).then(r=>r.json());currentUser=u;renderPanel(u);toast(u.active?'Account activated':'Account suspended','ok');loadUsers();}catch(_){toast('Toggle failed','err');}}
+async function resetDevice(){if(!currentUserId)return;if(!confirm('Reset TEE binding for '+(currentUser?.fullName||'this user')+'?'))return;try{const u=await fetch('/admin/users/'+currentUserId+'/reset-device',{method:'PUT'}).then(r=>r.json());currentUser=u;renderPanel(u);toast('TEE binding reset','ok');loadUsers();}catch(_){toast('Reset failed','err');}}
+async function adjustBalance(action){if(!currentUserId)return;const amtR=parseFloat(document.getElementById('adjAmount').value),note=document.getElementById('adjNote').value.trim();if(!amtR||amtR<=0){toast('Enter a valid amount','err');return;}const label=action==='credit'?'Credit':'Debit';if(!confirm(label+' Rs '+amtR.toLocaleString('en-IN')+' '+(action==='credit'?'to':'from')+' '+(currentUser?.fullName||'user')+'?'))return;try{const res=await fetch('/admin/account/'+currentUserId+'/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amountPaise:Math.round(amtR*100),note})});const data=await res.json();if(!res.ok||data.error){toast(data.error||label+' failed','err');return;}toast(label+' OK! Ref: '+data.referenceId,'ok');document.getElementById('adjAmount').value='';document.getElementById('adjNote').value='';currentUser=await fetch('/admin/users/'+currentUserId).then(r=>r.json());renderPanel(currentUser);const txs=await fetch('/admin/users/'+currentUserId+'/transactions').then(r=>r.json());renderPanelTx(txs);loadUsers();loadTxAll();loadStats();}catch(_){toast('Network error','err');}}
+function copyAcct(){navigator.clipboard?.writeText(document.getElementById('pAcct').textContent).then(()=>toast('Copied','ok'));}
 let _netBackendUrl='';
-async function loadNetworkInfo(){try{const s=await fetch('/api/server-info').then(r=>r.json());_netBackendUrl=s.backendUrl||'';document.getElementById('netUrl').textContent=s.backendUrl||'unknown';document.getElementById('netBankUrl').textContent=s.bankUrl||'unknown';document.getElementById('netIp').textContent=s.localIp||'unknown';const qr=document.getElementById('netQrImg'),fb=document.getElementById('netQrFallback');if(s.backendUrl){const qrUrl='https://chart.googleapis.com/chart?cht=qr&chs=160x160&chl='+encodeURIComponent(s.backendUrl)+'&choe=UTF-8';qr.src=qrUrl;qr.onload=()=>{qr.style.display='block';fb.style.display='none';};qr.onerror=()=>{fb.textContent=s.backendUrl;fb.style.fontSize='0.75rem';};}}catch(e){document.getElementById('netUrl').textContent='Could not detect IP — check Spring Boot is running';console.error('Network info error:',e);}}
-function copyNetUrl(){if(_netBackendUrl){navigator.clipboard.writeText(_netBackendUrl).then(()=>toast('Backend URL copied!','ok'));}}
-function deleteUser(){if(!currentUserId||!currentUser)return;const bal=currentUser.balancePaise||0;document.getElementById('delSubtitle').textContent='Delete account of '+currentUser.fullName+' ('+currentUser.accountNumber+')? This action is permanent and cannot be undone.';document.getElementById('delTransferTo').value='';if(bal>0){document.getElementById('delBalanceInfo').style.display='block';document.getElementById('delBalanceAmt').textContent=fmtRupees(bal);document.getElementById('delTransferSection').style.display='block';document.getElementById('delNoBalanceSection').style.display='none';}else{document.getElementById('delBalanceInfo').style.display='none';document.getElementById('delTransferSection').style.display='none';document.getElementById('delNoBalanceSection').style.display='block';}document.getElementById('deleteModal').classList.add('show');}
+async function loadNetworkInfo(){try{const s=await fetch('/api/server-info').then(r=>r.json());_netBackendUrl=s.backendUrl||'';document.getElementById('netUrl').textContent=s.backendUrl||'unknown';document.getElementById('netBankUrl').textContent=s.bankUrl||'unknown';document.getElementById('netIp').textContent=s.localIp||'unknown';const qr=document.getElementById('netQrImg'),fb=document.getElementById('netQrFallback');if(s.backendUrl){const src='https://chart.googleapis.com/chart?cht=qr&chs=140x140&chl='+encodeURIComponent(s.backendUrl)+'&choe=UTF-8';qr.src=src;qr.onload=()=>{qr.style.display='block';fb.style.display='none';};qr.onerror=()=>{fb.textContent=s.backendUrl;fb.style.fontSize='.72rem';};}}catch(_){document.getElementById('netUrl').textContent='Could not detect IP';}}
+function copyNetUrl(){if(_netBackendUrl)navigator.clipboard?.writeText(_netBackendUrl).then(()=>toast('URL copied!','ok'));}
+function deleteUser(){if(!currentUserId||!currentUser)return;const bal=currentUser.balancePaise||0;document.getElementById('delSubtitle').textContent='Delete account of '+currentUser.fullName+' ('+currentUser.accountNumber+')? Permanent.';document.getElementById('delTransferTo').value='';if(bal>0){document.getElementById('delBalanceInfo').style.display='block';document.getElementById('delBalanceAmt').textContent=fmtRupees(bal);document.getElementById('delTransferSection').style.display='block';document.getElementById('delNoBalanceSection').style.display='none';}else{document.getElementById('delBalanceInfo').style.display='none';document.getElementById('delTransferSection').style.display='none';document.getElementById('delNoBalanceSection').style.display='block';}document.getElementById('deleteModal').classList.add('show');}
 function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('show');}
-function editProfile(){if(!currentUser)return;document.getElementById('editName').value=currentUser.fullName||'';document.getElementById('editPhone').value=currentUser.phone||'';document.getElementById('editLang').value=currentUser.languageCode||'hi';document.getElementById('editPin').value='';document.getElementById('editModalSub').textContent='Editing profile for '+currentUser.fullName+'.';document.getElementById('editModal').classList.add('show');}
+async function confirmDeleteUser(action){if(!currentUserId)return;const to=action==='transfer'?document.getElementById('delTransferTo').value.trim():null;if(action==='transfer'&&!to){toast('Enter a target account or phone','err');return;}try{const res=await fetch('/admin/users/'+currentUserId+'/delete-permanent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,transferToAccount:to||null})});const data=await res.json();if(!res.ok){toast(data.error||'Delete failed','err');return;}toast('Account deleted','ok');closeDeleteModal();closePanel();await Promise.all([loadUsers(),loadStats(),loadTxAll()]);}catch(_){toast('Network error','err');}}
+function editProfile(){if(!currentUser)return;document.getElementById('editName').value=currentUser.fullName||'';document.getElementById('editPhone').value=currentUser.phone||'';document.getElementById('editLang').value=currentUser.languageCode||'hi';document.getElementById('editPin').value='';document.getElementById('editModalSub').textContent='Editing: '+currentUser.fullName;document.getElementById('editModal').classList.add('show');}
 function closeEditModal(){document.getElementById('editModal').classList.remove('show');}
-async function saveEditProfile(){if(!currentUserId)return;const name=document.getElementById('editName').value.trim(),phone=document.getElementById('editPhone').value.trim(),lang=document.getElementById('editLang').value,pin=document.getElementById('editPin').value.trim();if(!name){toast('Full name is required','err');return;}if(!phone){toast('Phone is required','err');return;}try{const res=await fetch('/admin/users/'+currentUserId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({fullName:name,phone,languageCode:lang,newPin:pin||null})});const data=await res.json();if(!res.ok||data.error){toast(data.error||'Update failed','err');return;}toast('Profile updated for '+data.fullName,'ok');currentUser=data;renderPanel(data);closeEditModal();loadUsers();}catch(e){toast('Network error','err');}}
-async function confirmDeleteUser(action){if(!currentUserId)return;const transferTo=action==='transfer'?document.getElementById('delTransferTo').value.trim():null;if(action==='transfer'&&(!transferTo)){toast('Enter a target account number or phone','err');return;}const name=currentUser?.fullName||'user';try{const res=await fetch('/admin/users/'+currentUserId+'/delete-permanent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,transferToAccount:transferTo||null})});const data=await res.json();if(!res.ok){toast(data.error||'Delete failed','err');return;}toast('Account deleted: '+name,'ok');closeDeleteModal();closePanel();await Promise.all([loadUsers(),loadStats(),loadTxAll()]);}catch(e){toast('Network error during delete','err');}}
-(async function init(){await Promise.all([loadNetworkInfo(),loadUsers(),loadTxAll(),loadStats()]);setInterval(()=>loadStats(),15000);})();
+async function saveEditProfile(){if(!currentUserId)return;const name=document.getElementById('editName').value.trim(),phone=document.getElementById('editPhone').value.trim(),lang=document.getElementById('editLang').value,pin=document.getElementById('editPin').value.trim();if(!name){toast('Full name is required','err');return;}if(!phone){toast('Phone is required','err');return;}try{const res=await fetch('/admin/users/'+currentUserId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({fullName:name,phone,languageCode:lang,newPin:pin||null})});const data=await res.json();if(!res.ok||data.error){toast(data.error||'Update failed','err');return;}toast('Profile updated for '+data.fullName,'ok');currentUser=data;renderPanel(data);closeEditModal();loadUsers();}catch(_){toast('Network error','err');}}
+(async function init(){await Promise.all([loadNetworkInfo(),loadUsers(),loadTxAll(),loadStats()]);setInterval(loadStats,15000);})();
 </script>
 </body>
 </html>
-
-
