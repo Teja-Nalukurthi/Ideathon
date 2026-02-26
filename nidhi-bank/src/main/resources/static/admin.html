@@ -136,6 +136,12 @@
   .modal-sep::before,.modal-sep::after { content:'';flex:1;height:1px;background:var(--border); }
   .modal-actions { display:flex;gap:10px;margin-top:20px;flex-wrap:wrap; }
   .modal-actions .btn { flex:1;min-width:120px; }
+  /* ── EDIT PROFILE MODAL ── */
+  .edit-modal-box { background:var(--surface);border:1px solid var(--accent2);border-radius:14px;padding:28px 24px;width:480px;max-width:calc(100vw - 40px); }
+  .edit-modal-box .modal-title { color:var(--accent2); }
+  .edit-modal-box select { width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:0.88rem; }
+  .edit-modal-box select:focus { outline:none;border-color:var(--accent2); }
+  .edit-modal-box input:focus { border-color:var(--accent2); }
 </style>
 </head>
 <body>
@@ -180,6 +186,13 @@
       <div class="info-item">
         <div class="info-label">Joined</div>
         <div class="info-val" id="pJoined" style="font-size:0.78rem;">&mdash;</div>
+      </div>
+    </div>
+    <div class="psec">
+      <div class="psec-title">Profile Details</div>
+      <div class="psec-row">
+        <span style="font-size:0.85rem;color:var(--muted);">Name &bull; Phone &bull; Language &bull; PIN</span>
+        <button class="btn btn-primary btn-sm" onclick="editProfile()">&#9998; Edit</button>
       </div>
     </div>
     <div class="psec">
@@ -301,6 +314,29 @@
   </div>
 </div>
 
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-overlay" id="editModal" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-box edit-modal-box">
+    <div class="modal-title">&#9998; Edit Profile</div>
+    <div class="modal-sub" id="editModalSub">Update user details below.</div>
+    <div class="modal-section"><label>Full Name</label><input type="text" id="editName" placeholder="e.g. Ravi Kumar"/></div>
+    <div class="modal-section"><label>Phone Number</label><input type="text" id="editPhone" placeholder="+919876543210"/></div>
+    <div class="modal-section"><label>Language</label>
+      <select id="editLang">
+        <option value="hi">Hindi</option><option value="te">Telugu</option>
+        <option value="ta">Tamil</option><option value="kn">Kannada</option>
+        <option value="mr">Marathi</option><option value="bn">Bengali</option>
+        <option value="gu">Gujarati</option><option value="en">English</option>
+      </select>
+    </div>
+    <div class="modal-section"><label>New PIN <span style="color:var(--muted);font-weight:400;">(leave blank to keep current)</span></label><input type="password" id="editPin" placeholder="4-6 digit PIN" maxlength="6"/></div>
+    <div class="modal-actions" style="margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveEditProfile()">Save Changes</button>
+      <button class="btn btn-grey" onclick="closeEditModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- DELETE USER MODAL -->
 <div class="modal-overlay" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
   <div class="modal-box">
@@ -372,6 +408,9 @@ async function loadNetworkInfo(){try{const s=await fetch('/api/server-info').the
 function copyNetUrl(){if(_netBackendUrl){navigator.clipboard.writeText(_netBackendUrl).then(()=>toast('Backend URL copied!','ok'));}}
 function deleteUser(){if(!currentUserId||!currentUser)return;const bal=currentUser.balancePaise||0;document.getElementById('delSubtitle').textContent='Delete account of '+currentUser.fullName+' ('+currentUser.accountNumber+')? This action is permanent and cannot be undone.';document.getElementById('delTransferTo').value='';if(bal>0){document.getElementById('delBalanceInfo').style.display='block';document.getElementById('delBalanceAmt').textContent=fmtRupees(bal);document.getElementById('delTransferSection').style.display='block';document.getElementById('delNoBalanceSection').style.display='none';}else{document.getElementById('delBalanceInfo').style.display='none';document.getElementById('delTransferSection').style.display='none';document.getElementById('delNoBalanceSection').style.display='block';}document.getElementById('deleteModal').classList.add('show');}
 function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('show');}
+function editProfile(){if(!currentUser)return;document.getElementById('editName').value=currentUser.fullName||'';document.getElementById('editPhone').value=currentUser.phone||'';document.getElementById('editLang').value=currentUser.languageCode||'hi';document.getElementById('editPin').value='';document.getElementById('editModalSub').textContent='Editing profile for '+currentUser.fullName+'.';document.getElementById('editModal').classList.add('show');}
+function closeEditModal(){document.getElementById('editModal').classList.remove('show');}
+async function saveEditProfile(){if(!currentUserId)return;const name=document.getElementById('editName').value.trim(),phone=document.getElementById('editPhone').value.trim(),lang=document.getElementById('editLang').value,pin=document.getElementById('editPin').value.trim();if(!name){toast('Full name is required','err');return;}if(!phone){toast('Phone is required','err');return;}try{const res=await fetch('/admin/users/'+currentUserId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({fullName:name,phone,languageCode:lang,newPin:pin||null})});const data=await res.json();if(!res.ok||data.error){toast(data.error||'Update failed','err');return;}toast('Profile updated for '+data.fullName,'ok');currentUser=data;renderPanel(data);closeEditModal();loadUsers();}catch(e){toast('Network error','err');}}
 async function confirmDeleteUser(action){if(!currentUserId)return;const transferTo=action==='transfer'?document.getElementById('delTransferTo').value.trim():null;if(action==='transfer'&&(!transferTo)){toast('Enter a target account number or phone','err');return;}const name=currentUser?.fullName||'user';try{const res=await fetch('/admin/users/'+currentUserId+'/delete-permanent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,transferToAccount:transferTo||null})});const data=await res.json();if(!res.ok){toast(data.error||'Delete failed','err');return;}toast('Account deleted: '+name,'ok');closeDeleteModal();closePanel();await Promise.all([loadUsers(),loadStats(),loadTxAll()]);}catch(e){toast('Network error during delete','err');}}
 (async function init(){await Promise.all([loadNetworkInfo(),loadUsers(),loadTxAll(),loadStats()]);setInterval(()=>loadStats(),15000);})();
 </script>

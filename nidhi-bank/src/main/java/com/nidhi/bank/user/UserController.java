@@ -59,6 +59,17 @@ public class UserController {
         return ResponseEntity.ok(Map.of("status", "deactivated"));
     }
 
+    /** PUT /admin/users/{id} — edit profile fields (name, phone, language, PIN) */
+    @PutMapping("/admin/users/{id}")
+    public ResponseEntity<?> updateProfile(@PathVariable Long id, @RequestBody UserService.EditProfileRequest req) {
+        try {
+            BankUser u = userService.updateProfile(id, req.fullName(), req.phone(), req.languageCode(), req.newPin());
+            return ResponseEntity.ok(u);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     /** PUT /admin/users/{id}/toggle — activate or deactivate account — returns full user */
     @PutMapping("/admin/users/{id}/toggle")
     public ResponseEntity<?> toggleUser(@PathVariable Long id) {

@@ -188,6 +188,35 @@ public class UserService {
         } catch (Exception e) { return null; }
     }
 
+    /** Admin: update editable profile fields — phone must remain unique if changed */
+    @Transactional
+    public BankUser updateProfile(Long id, String fullName, String phone, String languageCode, String newPin) {
+        BankUser user = userRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+
+        if (fullName != null && !fullName.isBlank()) {
+            user.setFullName(fullName.trim());
+        }
+        if (phone != null && !phone.isBlank()) {
+            String trimmedPhone = phone.trim();
+            if (!trimmedPhone.equals(user.getPhone())) {
+                if (userRepo.existsByPhone(trimmedPhone)) {
+                    throw new IllegalArgumentException("Phone number already in use: " + trimmedPhone);
+                }
+                user.setPhone(trimmedPhone);
+            }
+        }
+        if (languageCode != null && !languageCode.isBlank()) {
+            user.setLanguageCode(languageCode.trim());
+        }
+        if (newPin != null && !newPin.isBlank()) {
+            if (newPin.length() < 4) throw new IllegalArgumentException("PIN must be at least 4 digits");
+            user.setPinHash(hashPin(newPin));
+        }
+        log.info("Profile updated for user={} id={}", user.getFullName(), id);
+        return userRepo.save(user);
+    }
+
     // ── DTOs ───────────────────────────────────────────────────────
 
     public record RegisterRequest(
@@ -196,6 +225,13 @@ public class UserService {
             long initialBalancePaise,
             String languageCode,
             String pin
+    ) {}
+
+    public record EditProfileRequest(
+            String fullName,
+            String phone,
+            String languageCode,
+            String newPin
     ) {}
 
     public record StatsResponse(long totalUsers, long totalBalancePaise) {}
