@@ -75,6 +75,12 @@ data class AccountInfoResponse(
     val deviceId:      String?      // TEE-linked device identifier, null while not registered
 )
 
+data class NidhiContact(
+    val accountNumber: String,
+    val fullName: String,
+    val phone: String
+)
+
 data class TransactionItem(
     val referenceId:   String?,
     val txType:        String?,
@@ -106,6 +112,9 @@ interface NidhiApi {
 
     @POST("transaction/confirm")
     suspend fun confirm(@Body req: ConfirmRequest): ConfirmResponse
+
+    @POST("bank/account/lookup-batch")
+    suspend fun lookupBatch(@Body phones: List<String>): List<NidhiContact>
 
     @POST("bank/device/register")
     suspend fun registerDevice(@Body body: @JvmSuppressWildcards Map<String, String>): okhttp3.ResponseBody

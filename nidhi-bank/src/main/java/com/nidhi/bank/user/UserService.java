@@ -2,6 +2,8 @@ package com.nidhi.bank.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,23 @@ public class UserService {
 
     private final BankUserRepository userRepo;
     private final SecureRandom rng = new SecureRandom();
+
+    /** On startup, auto-link every user that still has deviceId = null */
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void autoLinkAllPendingUsers() {
+        List<BankUser> pending = userRepo.findAll().stream()
+                .filter(u -> u.getDeviceId() == null && u.getAccountNumber() != null)
+                .toList();
+        if (!pending.isEmpty()) {
+            pending.forEach(u -> {
+                u.setDeviceId(u.getAccountNumber());
+                u.setDeviceRegisteredAt(Instant.now());
+            });
+            userRepo.saveAll(pending);
+            log.info("Auto-linked {} existing user(s) with null deviceId", pending.size());
+        }
+    }
 
     public List<BankUser> getAllUsers() {
         return userRepo.findAllByOrderByCreatedAtDesc();

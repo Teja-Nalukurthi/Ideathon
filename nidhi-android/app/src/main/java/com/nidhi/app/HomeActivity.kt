@@ -21,6 +21,8 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import android.view.View
 import com.google.android.material.snackbar.Snackbar
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import com.nidhi.app.databinding.ActivityHomeBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,6 +53,15 @@ class HomeActivity : AppCompatActivity() {
             ?.firstOrNull() ?: return@registerForActivityResult
         // Pre-fill and hand off to MainActivity with the recognised text
         openMainActivity(inputText = text)
+    }
+
+    /** ZXing QR scanner — result is the account number embedded in the QR */
+    private val qrScanLauncher = registerForActivityResult(ScanContract()) { result ->
+        val raw = result.contents ?: return@registerForActivityResult
+        val accountNumber = raw.removePrefix("nidhi:").trim()
+        startActivity(Intent(this, SendManualActivity::class.java).apply {
+            putExtra("accountNumber", accountNumber)
+        })
     }
 
     // ─── Lifecycle ───────────────────────────────────────────────────────────
@@ -169,6 +180,27 @@ class HomeActivity : AppCompatActivity() {
         }
 
         binding.cardMic.setOnClickListener { startVoiceInput() }
+
+        binding.cardContacts.setOnClickListener {
+            startActivity(Intent(this, ContactsActivity::class.java))
+        }
+
+        binding.cardReceive.setOnClickListener {
+            startActivity(Intent(this, ReceiveMoneyActivity::class.java))
+        }
+
+        binding.cardScanQr.setOnClickListener {
+            qrScanLauncher.launch(
+                ScanOptions()
+                    .setPrompt("Scan a Nidhi account QR code")
+                    .setOrientationLocked(false)
+                    .setBeepEnabled(true)
+            )
+        }
+
+        binding.cardSendAcct.setOnClickListener {
+            startActivity(Intent(this, SendManualActivity::class.java))
+        }
 
         binding.btnSend.setOnClickListener {
             val text = binding.etInput.text?.toString()?.trim()
