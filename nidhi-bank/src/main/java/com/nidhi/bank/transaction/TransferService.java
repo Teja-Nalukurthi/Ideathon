@@ -9,7 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -93,20 +95,43 @@ public class TransferService {
         return new TransferResult(true, tx, newSenderBalance, null);
     }
 
+    @Transactional(readOnly = true)
     public List<BankTransaction> getTransactionsForAccount(String accountNumber) {
-        return txRepo.findByFromAccountOrToAccountOrderByCreatedAtDesc(accountNumber, accountNumber);
+        return hydrateNames(
+            txRepo.findByFromAccountOrToAccountOrderByCreatedAtDesc(accountNumber, accountNumber));
     }
 
     /** Get all transactions for a user by their database ID (for admin panel use) */
+    @Transactional(readOnly = true)
     public List<BankTransaction> getTransactionsByUserId(Long userId) {
         BankUser user = userRepo.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
-        return txRepo.findByFromAccountOrToAccountOrderByCreatedAtDesc(
-                user.getAccountNumber(), user.getAccountNumber());
+        return hydrateNames(
+            txRepo.findByFromAccountOrToAccountOrderByCreatedAtDesc(
+                user.getAccountNumber(), user.getAccountNumber()));
     }
 
+    @Transactional(readOnly = true)
     public List<BankTransaction> getAllTransactions() {
-        return txRepo.findAllByOrderByCreatedAtDesc();
+        return hydrateNames(txRepo.findAllByOrderByCreatedAtDesc());
+    }
+
+    /** Resolve names from current user records so renames are always reflected. */
+    private List<BankTransaction> hydrateNames(List<BankTransaction> txs) {
+        Map<String, String> cache = new HashMap<>();
+        txs.forEach(tx -> {
+            tx.setFromName(resolveName(tx.getFromAccount(), tx.getFromName(), cache));
+            tx.setToName  (resolveName(tx.getToAccount(),   tx.getToName(),   cache));
+        });
+        return txs;
+    }
+
+    private String resolveName(String account, String fallback, Map<String, String> cache) {
+        if (account == null || account.startsWith("ADMIN")) return fallback;
+        return cache.computeIfAbsent(account,
+                acc -> userRepo.findByAccountNumber(acc)
+                               .map(BankUser::getFullName)
+                               .orElse(fallback));
     }
 
     /** Admin manually credits a user's account (no challenge needed — local admin action) */

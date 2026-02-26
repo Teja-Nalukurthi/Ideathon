@@ -62,4 +62,5 @@ dependencies {
     // QR code scanner (for scanning server URL from admin dashboard)
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("com.google.firebase:firebase-messaging:23.2.1")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

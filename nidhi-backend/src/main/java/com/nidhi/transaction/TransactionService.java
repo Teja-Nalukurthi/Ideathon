@@ -157,13 +157,21 @@ public class TransactionService {
 
     private void sendPushNotification(String fcmToken, String amountFormatted, String recipientAcc) {
         try {
-            Map<String,Object> payload = Map.of(
-                    "to", fcmToken,
-                    "notification", Map.of(
-                            "title", "Money Credited",
-                            "body", "You have received " + amountFormatted + " from account " + recipientAcc
-                    )
-            );
+            // Use both 'notification' (shown by OS when app is closed) and
+            // 'data' (received by onMessageReceived in all app states)
+            String title = "\uD83D\uDCB0 Money Credited";
+            String body  = "You received " + amountFormatted + " into your account";
+            java.util.Map<String,Object> payload = new java.util.LinkedHashMap<>();
+            payload.put("to",       fcmToken);
+            payload.put("priority", "high");
+            payload.put("notification", Map.of("title", title, "body", body,
+                    "sound", "default", "click_action", "FLUTTER_NOTIFICATION_CLICK"));
+            payload.put("data", Map.of(
+                    "title",   title,
+                    "body",    body,
+                    "type",    "CREDIT",
+                    "account", recipientAcc
+            ));
             fcmWebClient.post()
                     .uri("/fcm/send")
                     .bodyValue(payload)

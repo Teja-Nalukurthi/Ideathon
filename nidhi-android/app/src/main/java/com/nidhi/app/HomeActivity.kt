@@ -1,9 +1,12 @@
 package com.nidhi.app
 
+import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
@@ -11,7 +14,11 @@ import android.widget.ArrayAdapter
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -25,6 +32,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Calendar
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.android.gms.tasks.Task
 
@@ -72,12 +80,17 @@ class HomeActivity : AppCompatActivity() {
         setupLanguageDropdown(session)
         setupListeners()
         checkServerConnectivity()
+        scheduleTransactionPoller()
+        requestNotificationPermission()
         // balance fetched in onResume so it refreshes after returning from MainActivity
     }
 
     override fun onResume() {
         super.onResume()
-        if (SessionManager.isLoggedIn(this)) fetchAccountInfo()
+        if (SessionManager.isLoggedIn(this)) {
+            fetchAccountInfo()
+            checkForNewTransactions()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -141,6 +154,15 @@ class HomeActivity : AppCompatActivity() {
             openMainActivity()
         }
 
+        binding.cardSetupTee.setOnClickListener {
+            teeRegistrationInProgress = false   // allow manual force re-register
+            setupTEE()
+        }
+        binding.btnSetupTee.setOnClickListener {
+            teeRegistrationInProgress = false
+            setupTEE()
+        }
+
         binding.cardHistory.setOnClickListener {
             startActivity(Intent(this, TransactionHistoryActivity::class.java))
         }
@@ -197,6 +219,12 @@ class HomeActivity : AppCompatActivity() {
                     binding.tvBalance.text         = formatRupees(info.balancePaise)
                     binding.tvAccountNumber.text   = info.accountNumber ?: session.accountNumber
                     binding.tvUserName.text        = info.fullName?.ifBlank { session.fullName } ?: session.fullName
+                    // update TEE card
+                    val teeRegistered = !info.deviceId.isNullOrBlank()
+                    binding.tvTeeStatus.text = if (teeRegistered) "Registered ✔" else "Not registered — tap Setup"
+                    binding.tvTeeStatus.setTextColor(
+                        getColor(if (teeRegistered) R.color.accent else R.color.error))
+                    binding.btnSetupTee.text = if (teeRegistered) "Re-register" else "Setup"
                     // if device unregistered, kick off TEE registration once
                     if (info.deviceId.isNullOrBlank() && !teeRegistrationInProgress) {
                         Snackbar.make(binding.root,
@@ -330,6 +358,60 @@ class HomeActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
             return null
+        }
+    }
+
+    /** Checks for new credits since last open and shows Snackbar + system notification. */
+    private fun checkForNewTransactions() {
+        val session = SessionManager.get(this) ?: return
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val txs = NidhiClient.api(this@HomeActivity).getTransactions(session.accountNumber)
+                if (txs.isEmpty()) return@launch
+                val prefs     = getSharedPreferences("nidhi_poller", Context.MODE_PRIVATE)
+                val lastRef   = prefs.getString("last_seen_ref", null)
+                val latestRef = txs.first().referenceId ?: return@launch
+                if (lastRef == null) {
+                    prefs.edit().putString("last_seen_ref", latestRef).apply()
+                    return@launch
+                }
+                if (lastRef == latestRef) return@launch
+                val newCredits = txs
+                    .takeWhile { it.referenceId != lastRef }
+                    .filter { it.status == "SUCCESS" }
+                    .filter { it.toAccount == session.accountNumber || it.txType == "ADMIN_CREDIT" }
+                prefs.edit().putString("last_seen_ref", latestRef).apply()
+                if (newCredits.isEmpty()) return@launch
+                val total = newCredits.sumOf { it.amountPaise }
+                val body  = if (newCredits.size == 1)
+                    "\u20B9${total / 100} credited to your account"
+                else
+                    "${newCredits.size} new credits totalling \u20B9${total / 100}"
+                withContext(Dispatchers.Main) {
+                    Snackbar.make(binding.root, "\uD83D\uDCB0 $body", Snackbar.LENGTH_LONG)
+                        .setAction("View") { startActivity(Intent(this@HomeActivity, TransactionHistoryActivity::class.java)) }
+                        .show()
+                }
+            } catch (_: Exception) { /* best-effort */ }
+        }
+    }
+
+    private fun scheduleTransactionPoller() {        val request = PeriodicWorkRequestBuilder<TransactionPollerWorker>(15, TimeUnit.MINUTES)
+            .setInitialDelay(1, TimeUnit.MINUTES)
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            TransactionPollerWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            request
+        )
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
         }
     }
 

@@ -37,8 +37,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        val title = message.notification?.title ?: "Nidhi Bank"
-        val body  = message.notification?.body  ?: ""
+        // Support both notification payload and data-only payload
+        val title = message.notification?.title ?: message.data["title"] ?: "Nidhi Bank"
+        val body  = message.notification?.body  ?: message.data["body"]  ?: ""
 
         val channelId = "nidhi_notifications"
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
