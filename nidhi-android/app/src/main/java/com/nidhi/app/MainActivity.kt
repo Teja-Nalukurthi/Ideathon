@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
     private fun handleVoiceCommand(raw: String): Boolean {
         val lower = raw.lowercase()
         val acct = SessionManager.get(this)?.accountNumber ?: return false
+
         when {
             lower.contains("balance") -> {
                 lifecycleScope.launch(Dispatchers.IO) {
@@ -324,6 +325,11 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun formatRupees(paise: Long): String {
+        val rupees = paise / 100.0
+        return "₹ %,.2f".format(rupees)
     }
 
     private fun showIdle() {

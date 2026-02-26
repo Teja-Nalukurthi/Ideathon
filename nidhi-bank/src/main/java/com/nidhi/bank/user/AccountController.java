@@ -31,7 +31,8 @@ public class AccountController {
                         "balancePaise",  u.getBalancePaise(),
                         "languageCode",  u.getLanguageCode() != null ? u.getLanguageCode() : "hi",
                         "active",        u.isActive(),
-                        "deviceId",      u.getDeviceId()
+                        "deviceId",      u.getDeviceId(),
+                        "fcmToken",      u.getFcmToken()
                 )))
                 .orElse(ResponseEntity.notFound().build());
     }

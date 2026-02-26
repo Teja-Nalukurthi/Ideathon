@@ -83,7 +83,7 @@ public class UserService {
 
     /** Called by mobile app on first launch to link TEE public key to account */
     @Transactional
-    public BankUser registerDevice(String phone, String deviceId, String publicKeyBase64) {
+    public BankUser registerDevice(String phone, String deviceId, String publicKeyBase64, String fcmToken) {
         BankUser user = userRepo.findByPhone(phone)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + phone));
         if (user.getDeviceId() != null && !user.getDeviceId().equals(deviceId)) {
@@ -92,6 +92,9 @@ public class UserService {
         user.setDeviceId(deviceId);
         user.setPublicKeyBase64(publicKeyBase64);
         user.setDeviceRegisteredAt(Instant.now());
+        if (fcmToken != null && !fcmToken.isBlank()) {
+            user.setFcmToken(fcmToken);
+        }
         userRepo.save(user);
         log.info("Device registered for user={} deviceId={}", user.getFullName(), deviceId);
         return user;

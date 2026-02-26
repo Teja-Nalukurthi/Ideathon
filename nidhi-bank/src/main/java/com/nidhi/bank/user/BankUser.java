@@ -52,6 +52,10 @@ public class BankUser {
     @Column
     private Instant deviceRegisteredAt;
 
+    // FCM push token from mobile app (updated when device registers)
+    @Column(length = 512)
+    private String fcmToken;
+
     // Convenience: balance in rupees for display
     @Transient
     public String getFormattedBalance() {

@@ -21,6 +21,7 @@ public class TransactionService {
     private final ChallengeEngine challengeEngine;
     private final AuditLog auditLog;
     private final WebClient bankClient;
+    private final WebClient fcmWebClient;
 
     @Value("${bank.internal.secret:nidhi-internal-secret-2026}")
     private String bankSecret;
@@ -28,11 +29,13 @@ public class TransactionService {
     public TransactionService(VoiceService voiceService,
                               ChallengeEngine challengeEngine,
                               AuditLog auditLog,
-                              @Qualifier("bankWebClient") WebClient bankClient) {
+                              @Qualifier("bankWebClient") WebClient bankClient,
+                              @Qualifier("fcmWebClient") WebClient fcmWebClient) {
         this.voiceService    = voiceService;
         this.challengeEngine = challengeEngine;
         this.auditLog        = auditLog;
         this.bankClient      = bankClient;
+        this.fcmWebClient    = fcmWebClient;
     }
 
     public InitiateResponse initiate(InitiateRequest req) {
@@ -89,6 +92,23 @@ public class TransactionService {
             return ConfirmResponse.error("BANK_TRANSFER_FAILED", bankResult.errorMessage());
         }
 
+        // fire off push notification to recipient if they have a token
+        try {
+            Map info = bankClient.get()
+                    .uri(u -> u.path("/bank/account/info").queryParam("account", recipient).build())
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+            if (info != null) {
+                String token = (String) info.get("fcmToken");
+                if (token != null && !token.isBlank()) {
+                    sendPushNotification(token, formatted, recipient);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not fetch account info for push: {}", e.getMessage());
+        }
+
         log.info("Committed: txId={} ref={} {} -> {}", txId, ref, formatted, recipient);
         return new ConfirmResponse(true, txId, ref, recipient, amountPaise, formatted,
                 result.seedHex(), result.sourcesActive(), result.responseTimeMs(), null, null);
@@ -133,6 +153,27 @@ public class TransactionService {
 
     private long safeParseLong(String s) {
         try { return Long.parseLong(s); } catch (Exception e) { return 0; }
+    }
+
+    private void sendPushNotification(String fcmToken, String amountFormatted, String recipientAcc) {
+        try {
+            Map<String,Object> payload = Map.of(
+                    "to", fcmToken,
+                    "notification", Map.of(
+                            "title", "Money Credited",
+                            "body", "You have received " + amountFormatted + " from account " + recipientAcc
+                    )
+            );
+            fcmWebClient.post()
+                    .uri("/fcm/send")
+                    .bodyValue(payload)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .timeout(Duration.ofSeconds(5))
+                    .block();
+        } catch (Exception e) {
+            log.warn("FCM push failed for token {}: {}", fcmToken, e.getMessage());
+        }
     }
 
     public record InitiateRequest(

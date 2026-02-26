@@ -44,4 +44,14 @@ public class WebClientConfig {
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
+
+    @Bean("fcmWebClient")
+    public WebClient fcmWebClient(
+            @Value("${fcm.server.key:}") String serverKey) {
+        return WebClient.builder()
+                .baseUrl("https://fcm.googleapis.com")
+                .defaultHeader("Authorization", "key=" + serverKey)
+                .defaultHeader("Content-Type", "application/json")
+                .build();
+    }
 }

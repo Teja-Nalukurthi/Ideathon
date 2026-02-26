@@ -9,6 +9,11 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_register_tee"
+        android:title="Register Device"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_logout"
         android:title="Logout"
         android:icon="@android:drawable/ic_menu_close_clear_cancel"

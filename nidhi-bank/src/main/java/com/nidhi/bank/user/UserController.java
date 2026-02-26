@@ -89,7 +89,7 @@ public class UserController {
     @PostMapping("/bank/device/register")
     public ResponseEntity<?> registerDevice(@RequestBody DeviceRegisterRequest req) {
         try {
-            BankUser user = userService.registerDevice(req.phone(), req.deviceId(), req.publicKeyBase64());
+            BankUser user = userService.registerDevice(req.phone(), req.deviceId(), req.publicKeyBase64(), req.fcmToken());
             return ResponseEntity.ok(Map.of(
                     "status", "registered",
                     "accountNumber", user.getAccountNumber(),
@@ -153,5 +153,5 @@ public class UserController {
 
     public record LoginRequest(String phone, String pin) {}
 
-    public record DeviceRegisterRequest(String phone, String deviceId, String publicKeyBase64) {}
+    public record DeviceRegisterRequest(String phone, String deviceId, String publicKeyBase64, String fcmToken) {}
 }

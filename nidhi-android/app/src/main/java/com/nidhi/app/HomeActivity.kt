@@ -25,6 +25,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Calendar
 import java.util.Locale
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.android.gms.tasks.Task
 
 class HomeActivity : AppCompatActivity() {
 
@@ -195,9 +197,11 @@ class HomeActivity : AppCompatActivity() {
                     // if device unregistered, remind user to set up TEE
                     if (info.deviceId.isNullOrBlank()) {
                         Snackbar.make(binding.root,
-                            "Device not registered. Use menu → Register Device", Snackbar.LENGTH_LONG)
-                            .setAction("OK", null)
+                            "Device not registered. Registering now...", Snackbar.LENGTH_LONG)
+                            .setAction("Cancel") { /* user can dismiss */ }
                             .show()
+                        // kick off registration in background automatically
+                        setupTEE()
                     }
                 }
             } catch (e: Exception) {
@@ -274,17 +278,24 @@ class HomeActivity : AppCompatActivity() {
             Snackbar.make(binding.root, "Cannot access keystore", Snackbar.LENGTH_LONG).show()
             return
         }
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                NidhiClient.api(this@HomeActivity).registerDevice(
-                    mapOf("phone" to phone, "deviceId" to deviceId, "publicKeyBase64" to pubB64)
-                )
-                withContext(Dispatchers.Main) {
-                    Snackbar.make(binding.root, "Device registered successfully", Snackbar.LENGTH_LONG).show()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Snackbar.make(binding.root, "Registration failed: ${e.message}", Snackbar.LENGTH_LONG).show()
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task: com.google.android.gms.tasks.Task<String> ->
+            val fcm: String? = if (task.isSuccessful) task.result else null
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val body = mutableMapOf(
+                        "phone" to phone,
+                        "deviceId" to deviceId,
+                        "publicKeyBase64" to pubB64
+                    )
+                    if (!fcm.isNullOrBlank()) body["fcmToken"] = fcm
+                    NidhiClient.api(this@HomeActivity).registerDevice(body)
+                    withContext(Dispatchers.Main) {
+                        Snackbar.make(binding.root, "Device registered successfully", Snackbar.LENGTH_LONG).show()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Snackbar.make(binding.root, "Registration failed: ${e.message}", Snackbar.LENGTH_LONG).show()
+                    }
                 }
             }
         }
