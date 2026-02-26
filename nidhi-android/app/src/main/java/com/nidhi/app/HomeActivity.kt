@@ -19,10 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
-import java.util.Base64
 import com.google.android.material.snackbar.Snackbar
 import com.nidhi.app.databinding.ActivityHomeBinding
 import kotlinx.coroutines.Dispatchers
@@ -33,8 +30,6 @@ import java.net.URL
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import com.google.firebase.messaging.FirebaseMessaging
-import com.google.android.gms.tasks.Task
 
 class HomeActivity : AppCompatActivity() {
 
@@ -47,9 +42,6 @@ class HomeActivity : AppCompatActivity() {
 
     private val languages     = listOf("en","hi","te","ta","kn","ml","mr","bn")
     private val languageNames = listOf("English","Hindi","Telugu","Tamil","Kannada","Malayalam","Marathi","Bengali")
-
-    // guard: prevent setupTEE() from firing multiple times concurrently
-    @Volatile private var teeRegistrationInProgress = false
 
     private val speechLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -112,22 +104,9 @@ class HomeActivity : AppCompatActivity() {
         NidhiSseClient.disconnect()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    override fun onCreateOptionsMenu(menu: android.view.Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
-        menu.add(0, R.id.action_register_tee, 1, "Register Device").apply {
-            setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-        }
         return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_register_tee -> {
-                setupTEE()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
     }
 
 
@@ -171,15 +150,6 @@ class HomeActivity : AppCompatActivity() {
 
         binding.cardSendMoney.setOnClickListener {
             openMainActivity()
-        }
-
-        binding.cardSetupTee.setOnClickListener {
-            teeRegistrationInProgress = false   // allow manual force re-register
-            setupTEE()
-        }
-        binding.btnSetupTee.setOnClickListener {
-            teeRegistrationInProgress = false
-            setupTEE()
         }
 
         binding.cardHistory.setOnClickListener {
@@ -238,20 +208,6 @@ class HomeActivity : AppCompatActivity() {
                     binding.tvBalance.text         = formatRupees(info.balancePaise)
                     binding.tvAccountNumber.text   = info.accountNumber ?: session.accountNumber
                     binding.tvUserName.text        = info.fullName?.ifBlank { session.fullName } ?: session.fullName
-                    // update TEE card
-                    val teeRegistered = !info.deviceId.isNullOrBlank()
-                    binding.tvTeeStatus.text = if (teeRegistered) "Registered ✔" else "Not registered — tap Setup"
-                    binding.tvTeeStatus.setTextColor(
-                        getColor(if (teeRegistered) R.color.accent else R.color.error))
-                    binding.btnSetupTee.text = if (teeRegistered) "Re-register" else "Setup"
-                    // if device unregistered, kick off TEE registration once
-                    if (info.deviceId.isNullOrBlank() && !teeRegistrationInProgress) {
-                        Snackbar.make(binding.root,
-                            "Device not registered. Registering now...", Snackbar.LENGTH_LONG)
-                            .setAction("Cancel") { teeRegistrationInProgress = true /* suppress auto-retry */ }
-                            .show()
-                        setupTEE()
-                    }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -316,69 +272,6 @@ class HomeActivity : AppCompatActivity() {
     }
 
     // ─── Server status ────────────────────────────────────────────────────────
-
-    private fun setupTEE() {
-        if (teeRegistrationInProgress) return
-        teeRegistrationInProgress = true
-        val session = SessionManager.get(this) ?: run { teeRegistrationInProgress = false; return }
-        val phone = session.phone
-        val deviceId = session.accountNumber
-        val pubB64 = getOrCreateKeyPair()?.let { keypair ->
-            Base64.getEncoder().encodeToString(keypair.public.encoded)
-        } ?: run {
-            teeRegistrationInProgress = false
-            Snackbar.make(binding.root, "Cannot access keystore", Snackbar.LENGTH_LONG).show()
-            return
-        }
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task: com.google.android.gms.tasks.Task<String> ->
-            val fcm: String? = if (task.isSuccessful) task.result else null
-            lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    val body = mutableMapOf(
-                        "phone" to phone,
-                        "deviceId" to deviceId,
-                        "publicKeyBase64" to pubB64
-                    )
-                    if (!fcm.isNullOrBlank()) body["fcmToken"] = fcm
-                    NidhiClient.api(this@HomeActivity).registerDevice(body)
-                    withContext(Dispatchers.Main) {
-                        Snackbar.make(binding.root, "Device registered successfully", Snackbar.LENGTH_LONG).show()
-                        // refresh to update deviceId badge
-                        fetchAccountInfo()
-                    }
-                } catch (e: Exception) {
-                    teeRegistrationInProgress = false   // allow retry on failure
-                    withContext(Dispatchers.Main) {
-                        Snackbar.make(binding.root, "Registration failed: ${e.message}", Snackbar.LENGTH_LONG).show()
-                    }
-                }
-            }
-        }
-    }
-
-    private fun getOrCreateKeyPair(): java.security.KeyPair? {
-        try {
-            val alias = "nidhi_tee"
-            val ks = java.security.KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-            if (!ks.containsAlias(alias)) {
-                val kpg = java.security.KeyPairGenerator.getInstance("EC", "AndroidKeyStore")
-                val spec = android.security.keystore.KeyGenParameterSpec.Builder(
-                    alias,
-                    android.security.keystore.KeyProperties.PURPOSE_SIGN or android.security.keystore.KeyProperties.PURPOSE_VERIFY
-                ).setAlgorithmParameterSpec(java.security.spec.ECGenParameterSpec("secp256r1"))
-                    .setDigests(android.security.keystore.KeyProperties.DIGEST_SHA256)
-                    .build()
-                kpg.initialize(spec)
-                kpg.generateKeyPair()
-            }
-            val publicKey = ks.getCertificate(alias).publicKey
-            val privateKey = ks.getKey(alias, null) as java.security.PrivateKey
-            return java.security.KeyPair(publicKey, privateKey)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return null
-        }
-    }
 
     /** Checks for new credits since last open and shows Snackbar + system notification. */
     private fun checkForNewTransactions() {

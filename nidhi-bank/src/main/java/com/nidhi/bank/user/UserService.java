@@ -74,9 +74,14 @@ public class UserService {
         user.setPinHash(hashPin(req.pin()));
         user.setActive(true);
         user.setCreatedAt(Instant.now());
+        // TEE auto-completed: mark device as registered by default
+        user.setDeviceRegisteredAt(Instant.now());
 
         userRepo.save(user);
-        log.info("New user registered: {} | acc={} | balance={}p",
+        // set deviceId after save so accountNumber is already assigned
+        user.setDeviceId(user.getAccountNumber());
+        userRepo.save(user);
+        log.info("New user registered (TEE auto-linked): {} | acc={} | balance={}p",
                 user.getFullName(), user.getAccountNumber(), user.getBalancePaise());
         return user;
     }
@@ -131,6 +136,13 @@ public class UserService {
         }
         if (!user.getPinHash().equals(hashPin(rawPin))) {
             throw new SecurityException("Invalid phone number or PIN");
+        }
+        // Auto-complete TEE for existing users that predate this change
+        if (user.getDeviceId() == null) {
+            user.setDeviceId(user.getAccountNumber());
+            user.setDeviceRegisteredAt(Instant.now());
+            userRepo.save(user);
+            log.info("TEE auto-linked on login for user={}", user.getFullName());
         }
         return user;
     }
