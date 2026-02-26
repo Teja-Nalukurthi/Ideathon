@@ -6,9 +6,13 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.lifecycle.lifecycleScope
 import com.google.zxing.BarcodeFormat
 import com.journeyapps.barcodescanner.BarcodeEncoder
 import com.nidhi.app.databinding.ActivityReceiveMoneyBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
@@ -27,18 +31,31 @@ class ReceiveMoneyActivity : AppCompatActivity() {
         val session = SessionManager.get(this) ?: run { finish(); return }
         val accountNumber = session.accountNumber
 
-        binding.tvReceiveName.text    = session.fullName
-        binding.tvReceiveAcct.text    = accountNumber
+        // Show account number as the primary identifier — always correct
+        binding.tvReceiveAcct.text = accountNumber
+        // Use cached name first, then refresh from server
+        binding.tvReceiveName.text = session.fullName.ifBlank { "" }
 
+        // QR encodes just the account number so scanning apps get a clean value
         try {
             val encoder = BarcodeEncoder()
-            val bitmap  = encoder.encodeBitmap("nidhi:$accountNumber", BarcodeFormat.QR_CODE, 600, 600)
+            val bitmap  = encoder.encodeBitmap(accountNumber, BarcodeFormat.QR_CODE, 600, 600)
             binding.ivQrCode.setImageBitmap(bitmap)
-
             binding.btnShare.setOnClickListener { shareQr(bitmap, accountNumber) }
         } catch (e: Exception) {
             binding.tvQrError.visibility = View.VISIBLE
             binding.tvQrError.text = "QR generation failed: ${e.message}"
+        }
+
+        // Fetch real name from server
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val info = NidhiClient.api(this@ReceiveMoneyActivity).getAccountInfo(accountNumber)
+                val name = info.fullName?.takeIf { it.isNotBlank() } ?: session.fullName
+                withContext(Dispatchers.Main) {
+                    binding.tvReceiveName.text = name
+                }
+            } catch (_: Exception) { /* use cached */ }
         }
     }
 

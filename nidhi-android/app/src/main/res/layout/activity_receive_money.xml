@@ -39,24 +39,26 @@
                 android:contentDescription="QR Code" />
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:id="@+id/tvReceiveName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Your Name"
-            android:textColor="@color/on_surface"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="6dp" />
-
+        <!-- Account number is the primary label — always correct -->        
         <TextView
             android:id="@+id/tvReceiveAcct"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="NIDHI..."
             android:textColor="@color/accent"
-            android:textSize="14sp"
+            android:textSize="20sp"
+            android:textStyle="bold"
             android:fontFamily="monospace"
+            android:layout_marginBottom="4dp" />
+
+        <!-- Name is secondary, filled from live API -->        
+        <TextView
+            android:id="@+id/tvReceiveName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/on_surface_dim"
+            android:textSize="14sp"
             android:layout_marginBottom="4dp" />
 
         <TextView

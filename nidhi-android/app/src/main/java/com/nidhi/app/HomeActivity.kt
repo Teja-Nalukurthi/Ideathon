@@ -55,12 +55,15 @@ class HomeActivity : AppCompatActivity() {
         openMainActivity(inputText = text)
     }
 
-    /** ZXing QR scanner — result is the account number embedded in the QR */
+    /** ZXing QR scanner — QR encodes raw account number (NIDHI...) */
     private val qrScanLauncher = registerForActivityResult(ScanContract()) { result ->
         val raw = result.contents ?: return@registerForActivityResult
-        val accountNumber = raw.removePrefix("nidhi:").trim()
+        // Support both bare account number and legacy nidhi: prefix
+        val accountNumber = if (raw.startsWith("nidhi:")) raw.removePrefix("nidhi:").trim() else raw.trim()
+        if (accountNumber.isBlank()) return@registerForActivityResult
         startActivity(Intent(this, SendManualActivity::class.java).apply {
             putExtra("accountNumber", accountNumber)
+            // Don't pass a name — SendManualActivity will use the account number directly
         })
     }
 
