@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,16 +25,18 @@ public class AccountController {
     @GetMapping("/bank/account/info")
     public ResponseEntity<?> getAccountInfo(@RequestParam String account) {
         return userService.getByAccountNumber(account)
-                .map(u -> ResponseEntity.ok(Map.<String, Object>of(
-                        "accountNumber", u.getAccountNumber(),
-                        "fullName",      u.getFullName(),
-                        "phone",         u.getPhone(),
-                        "balancePaise",  u.getBalancePaise(),
-                        "languageCode",  u.getLanguageCode() != null ? u.getLanguageCode() : "hi",
-                        "active",        u.isActive(),
-                        "deviceId",      u.getDeviceId(),
-                        "fcmToken",      u.getFcmToken()
-                )))
+                .map(u -> {
+                    Map<String, Object> body = new LinkedHashMap<>();
+                    body.put("accountNumber", u.getAccountNumber());
+                    body.put("fullName",      u.getFullName());
+                    body.put("phone",         u.getPhone());
+                    body.put("balancePaise",  u.getBalancePaise());
+                    body.put("languageCode",  u.getLanguageCode() != null ? u.getLanguageCode() : "hi");
+                    body.put("active",        u.isActive());
+                    body.put("deviceId",      u.getDeviceId());      // may be null → JSON null is fine
+                    body.put("fcmToken",      u.getFcmToken());       // may be null
+                    return ResponseEntity.ok(body);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 

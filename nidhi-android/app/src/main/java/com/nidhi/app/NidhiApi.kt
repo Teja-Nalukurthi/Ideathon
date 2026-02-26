@@ -108,5 +108,5 @@ interface NidhiApi {
     suspend fun confirm(@Body req: ConfirmRequest): ConfirmResponse
 
     @POST("bank/device/register")
-    suspend fun registerDevice(@Body body: Map<String, String>): Map<String, Any>
+    suspend fun registerDevice(@Body body: @JvmSuppressWildcards Map<String, String>): okhttp3.ResponseBody
 }

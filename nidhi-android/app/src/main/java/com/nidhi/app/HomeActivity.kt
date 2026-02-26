@@ -40,6 +40,9 @@ class HomeActivity : AppCompatActivity() {
     private val languages     = listOf("en","hi","te","ta","kn","ml","mr","bn")
     private val languageNames = listOf("English","Hindi","Telugu","Tamil","Kannada","Malayalam","Marathi","Bengali")
 
+    // guard: prevent setupTEE() from firing multiple times concurrently
+    @Volatile private var teeRegistrationInProgress = false
+
     private val speechLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -194,13 +197,12 @@ class HomeActivity : AppCompatActivity() {
                     binding.tvBalance.text         = formatRupees(info.balancePaise)
                     binding.tvAccountNumber.text   = info.accountNumber ?: session.accountNumber
                     binding.tvUserName.text        = info.fullName?.ifBlank { session.fullName } ?: session.fullName
-                    // if device unregistered, remind user to set up TEE
-                    if (info.deviceId.isNullOrBlank()) {
+                    // if device unregistered, kick off TEE registration once
+                    if (info.deviceId.isNullOrBlank() && !teeRegistrationInProgress) {
                         Snackbar.make(binding.root,
                             "Device not registered. Registering now...", Snackbar.LENGTH_LONG)
-                            .setAction("Cancel") { /* user can dismiss */ }
+                            .setAction("Cancel") { teeRegistrationInProgress = true /* suppress auto-retry */ }
                             .show()
-                        // kick off registration in background automatically
                         setupTEE()
                     }
                 }
@@ -269,12 +271,15 @@ class HomeActivity : AppCompatActivity() {
     // ─── Server status ────────────────────────────────────────────────────────
 
     private fun setupTEE() {
-        val session = SessionManager.get(this) ?: return
+        if (teeRegistrationInProgress) return
+        teeRegistrationInProgress = true
+        val session = SessionManager.get(this) ?: run { teeRegistrationInProgress = false; return }
         val phone = session.phone
         val deviceId = session.accountNumber
         val pubB64 = getOrCreateKeyPair()?.let { keypair ->
             Base64.getEncoder().encodeToString(keypair.public.encoded)
         } ?: run {
+            teeRegistrationInProgress = false
             Snackbar.make(binding.root, "Cannot access keystore", Snackbar.LENGTH_LONG).show()
             return
         }
@@ -291,8 +296,11 @@ class HomeActivity : AppCompatActivity() {
                     NidhiClient.api(this@HomeActivity).registerDevice(body)
                     withContext(Dispatchers.Main) {
                         Snackbar.make(binding.root, "Device registered successfully", Snackbar.LENGTH_LONG).show()
+                        // refresh to update deviceId badge
+                        fetchAccountInfo()
                     }
                 } catch (e: Exception) {
+                    teeRegistrationInProgress = false   // allow retry on failure
                     withContext(Dispatchers.Main) {
                         Snackbar.make(binding.root, "Registration failed: ${e.message}", Snackbar.LENGTH_LONG).show()
                     }
