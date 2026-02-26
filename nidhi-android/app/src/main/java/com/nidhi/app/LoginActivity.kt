@@ -3,9 +3,12 @@ package com.nidhi.app
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.nidhi.app.databinding.ActivityLoginBinding
 import kotlinx.coroutines.launch
 
@@ -26,6 +29,48 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btnLogin.setOnClickListener { doLogin() }
+        binding.btnChangeServer.setOnClickListener { showServerUrlDialog() }
+
+        updateServerLabel()
+    }
+
+    private fun updateServerLabel() {
+        binding.tvServerUrl.text = ServerConfig.getUrl(this).trimEnd('/')
+    }
+
+    private fun showServerUrlDialog() {
+        val current = ServerConfig.getUrl(this).trimEnd('/')
+
+        // Build dialog layout programmatically — no extra layout file needed
+        val til = TextInputLayout(this).apply {
+            hint = "Server URL  (e.g. http://192.168.1.5:8081)"
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            setPadding(48, 24, 48, 8)
+        }
+        val et = TextInputEditText(this).apply {
+            setText(current)
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                    android.text.InputType.TYPE_TEXT_VARIATION_URI
+            setSelection(text?.length ?: 0)
+        }
+        til.addView(et)
+
+        AlertDialog.Builder(this)
+            .setTitle("⚙ Server URL")
+            .setMessage("Enter the base URL of the Nidhi backend. Get it from the admin dashboard's Device Connection card.")
+            .setView(til)
+            .setPositiveButton("Save") { _, _ ->
+                val newUrl = et.text?.toString()?.trim() ?: ""
+                if (newUrl.isBlank() || !newUrl.startsWith("http")) {
+                    Snackbar.make(binding.root, "Invalid URL — must start with http://", Snackbar.LENGTH_LONG).show()
+                    return@setPositiveButton
+                }
+                ServerConfig.saveUrl(this, newUrl)
+                updateServerLabel()
+                Snackbar.make(binding.root, "Server URL saved", Snackbar.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun doLogin() {

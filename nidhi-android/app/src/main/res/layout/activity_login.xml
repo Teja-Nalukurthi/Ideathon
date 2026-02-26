@@ -119,7 +119,28 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Server URL button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnChangeServer"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚙ Change Server URL"
+            android:textColor="@color/on_surface_dim"
+            android:textSize="13sp"
+            android:layout_marginTop="12dp" />
+
         <!-- Footer note -->
+        <TextView
+            android:id="@+id/tvServerUrl"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/on_surface_dim"
+            android:textSize="11sp"
+            android:gravity="center"
+            android:fontFamily="monospace"
+            android:layout_marginTop="4dp" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -127,7 +148,7 @@
             android:textColor="@color/on_surface_dim"
             android:textSize="12sp"
             android:gravity="center"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="12dp" />
 
     </LinearLayout>
 </ScrollView>
