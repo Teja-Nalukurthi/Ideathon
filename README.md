@@ -255,8 +255,6 @@ python main.py
 ### 2. Start nidhi-backend (security + AI)
 ```powershell
 cd nidhi-backend
-# Set your Google API key:
-$env:GOOGLE_API_KEY = "AIzaSy..."
 mvn spring-boot:run
 # Runs on http://localhost:8081
 ```
